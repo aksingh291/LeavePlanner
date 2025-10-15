@@ -6,14 +6,14 @@
     <title>Team Leave Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Libraries for PDF file generation -->
+    <!-- Libraries for Excel and PDF file generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Custom styles for calendar day hover effect and message box animations */
         .calendar-day:not(.disabled):hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -32,21 +32,12 @@
         }
         #tooltip {
             transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
-            pointer-events: none; /* Prevents the tooltip from interfering with mouse events */
+            pointer-events: none;
             transform: scale(0.95);
         }
         #tooltip.visible {
             opacity: 1;
             transform: scale(1);
-        }
-        /* Shake animation for form errors */
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-6px); }
-          75% { transform: translateX(6px); }
-        }
-        .shake {
-          animation: shake 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -57,7 +48,7 @@
         <!-- Header Section -->
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Team Leave Planner</h1>
-            <p class="mt-2 text-md text-gray-600">Plan your team's time off. Changes are updated in real-time for all users.</p>
+            <p class="mt-2 text-md text-gray-600">Import the latest Excel file to start, and export your changes to share.</p>
         </header>
 
         <!-- Main Content Grid -->
@@ -90,7 +81,7 @@
 
             <!-- Right Column: Calendar View -->
             <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
                     <div class="flex items-center">
                         <button id="prevMonth" class="p-2 rounded-full hover:bg-gray-100 transition">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -100,29 +91,33 @@
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </button>
                     </div>
-                    <div>
-                        <button id="downloadButton" class="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-transform transform hover:scale-105">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            <span class="hidden sm:inline">Download Report</span>
+                    <div class="flex items-center space-x-2">
+                        <input type="file" id="importFile" class="hidden" accept=".xlsx, .xls">
+                        <button id="importButton" class="flex items-center space-x-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            <span>Import</span>
+                        </button>
+                         <button id="exportButton" class="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
+                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span>Export</span>
+                        </button>
+                        <button id="downloadPdfButton" class="flex items-center space-x-1 bg-red-500 text-white font-semibold py-2 px-3 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zm5 2v4h2V5h-2zm-2 6v2h6v-2H7z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
+                            <span class="hidden sm:inline">PDF</span>
                         </button>
                     </div>
                 </div>
                 
-                <!-- Calendar Grid -->
                 <div id="calendar-header" class="grid grid-cols-7 gap-2 text-center text-xs sm:text-sm font-semibold text-gray-500 mb-2">
                     <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                 </div>
-                <div id="calendarGrid" class="grid grid-cols-7 gap-1 md:gap-2">
-                    <!-- Calendar days will be dynamically generated here -->
-                </div>
+                <div id="calendarGrid" class="grid grid-cols-7 gap-1 md:gap-2"></div>
             </div>
         </main>
     </div>
     
-    <!-- Tooltip for displaying names on hover -->
     <div id="tooltip" class="fixed opacity-0 z-10 p-3 bg-gray-800 text-white border border-gray-300 rounded-lg shadow-xl text-sm w-48"></div>
 
-    <!-- Confirmation Modal -->
     <div id="confirmationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3 text-center">
@@ -134,42 +129,21 @@
                     <p id="modalMessage" class="text-sm text-gray-500"></p>
                 </div>
                 <div class="items-center px-4 py-3 space-x-2">
-                    <button id="modalConfirmBtn" class="px-4 py-2 bg-indigo-500 text-white text-base font-medium rounded-md w-auto hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Yes, Proceed
-                    </button>
-                    <button id="modalCancelBtn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
-                        Cancel
-                    </button>
+                    <button id="modalConfirmBtn" class="px-4 py-2 bg-indigo-500 text-white text-base font-medium rounded-md w-auto hover:bg-indigo-600">Yes, Proceed</button>
+                    <button id="modalCancelBtn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto hover:bg-gray-300">Cancel</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Firebase Imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        document.addEventListener('DOMContentLoaded', async () => {
-            // --- FIREBASE SETUP ---
-            // These variables are placeholders and will be provided by the environment.
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-leave-planner';
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO", authDomain: "DEMO", projectId: "DEMO" };
-
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-            setLogLevel('debug'); // For more detailed console logs from Firestore
-
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
             // --- STATE MANAGEMENT ---
             let currentDate = new Date();
             let currentMonth = currentDate.getMonth();
             let currentYear = currentDate.getFullYear();
             let editingLeave = null; 
-            let leaves = []; // This will now be populated by Firestore in real-time
-            let leavesCollectionPath;
+            let leaves = JSON.parse(localStorage.getItem('team-leaves')) || [];
 
             // --- DOM ELEMENT REFERENCES ---
             const form = document.getElementById('leaveForm');
@@ -183,54 +157,22 @@
             const monthYearDisplay = document.getElementById('currentMonthYear');
             const prevBtn = document.getElementById('prevMonth');
             const nextBtn = document.getElementById('nextMonth');
-            const downloadButton = document.getElementById('downloadButton');
+            const importButton = document.getElementById('importButton');
+            const importFileInput = document.getElementById('importFile');
+            const exportButton = document.getElementById('exportButton');
+            const downloadPdfButton = document.getElementById('downloadPdfButton');
             const tooltip = document.getElementById('tooltip');
             const confirmationModal = document.getElementById('confirmationModal');
             const modalMessage = document.getElementById('modalMessage');
             const modalConfirmBtn = document.getElementById('modalConfirmBtn');
             const modalCancelBtn = document.getElementById('modalCancelBtn');
 
-            // --- AUTHENTICATION & INITIALIZATION ---
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    // User is signed in.
-                    console.log("User authenticated with UID:", user.uid);
-                    // Set the database path to a shared location for this app instance.
-                    leavesCollectionPath = `artifacts/${appId}/public/data/leaves`;
-                    // Start listening for real-time updates from Firestore
-                    setupLeaveListener();
-                } else {
-                    // User is signed out.
-                     console.log("User is not authenticated.");
-                }
-            });
-            
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                 console.error("Authentication failed:", error);
-                 showMessage('Could not connect to the database. Please refresh.', 'error');
-            }
-
-
             // --- CORE FUNCTIONS ---
-            
-            const setupLeaveListener = () => {
-                const leavesCollection = collection(db, leavesCollectionPath);
-                onSnapshot(leavesCollection, (snapshot) => {
-                    leaves = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    console.log("Updated leaves from Firestore:", leaves);
-                    renderCalendar();
-                }, (error) => {
-                    console.error("Error fetching leaves:", error);
-                    showMessage('Failed to sync with the database.', 'error');
-                });
+            const saveAndRender = () => {
+                localStorage.setItem('team-leaves', JSON.stringify(leaves));
+                renderCalendar();
             };
-
+            
             const renderCalendar = () => {
                 calendarGrid.innerHTML = ''; 
                 const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
@@ -281,11 +223,7 @@
                         </div>`
                     ).join('');
 
-                    const dayHTML = `
-                        <div class="${dayClasses}" data-date="${dateString}">
-                            <div class="${dayNumberClasses}">${day}</div>
-                            ${employeeListHTML}
-                        </div>`;
+                    const dayHTML = `<div class="${dayClasses}" data-date="${dateString}"><div class="${dayNumberClasses}">${day}</div>${employeeListHTML}</div>`;
                     calendarGrid.insertAdjacentHTML('beforeend', dayHTML);
                 }
             };
@@ -298,8 +236,8 @@
                 nameInput.disabled = false;
                 cancelButton.classList.add('hidden');
             };
-
-            const handleFormSubmit = async (event) => {
+            
+            const handleFormSubmit = (event) => {
                 event.preventDefault();
                 const name = nameInput.value.trim();
                 const newDate = dateInput.value;
@@ -310,88 +248,65 @@
                 }
                 const today = new Date();
                 today.setHours(0,0,0,0);
-                const selectedDate = new Date(newDate + 'T00:00:00');
-                if (selectedDate < today) {
+                if (new Date(newDate + 'T00:00:00') < today) {
                     showMessage('Cannot book leave for a past date.', 'error');
                     return;
                 }
 
-                const addLeaveAction = async () => {
-                    try {
-                        await addDoc(collection(db, leavesCollectionPath), { employeeName: name, leaveDate: newDate });
-                        showMessage('Leave request submitted successfully!', 'success');
-                        resetForm();
-                        // Calendar will auto-update via onSnapshot listener
-                    } catch (error) {
-                        console.error("Error adding document: ", error);
-                        showMessage('Failed to submit leave.', 'error');
-                    }
+                const addLeaveAction = () => {
+                    leaves.push({ id: Date.now().toString(), employeeName: name, leaveDate: newDate });
+                    showMessage('Leave request submitted!', 'success');
+                    resetForm();
+                    saveAndRender();
                 };
 
-                const updateLeaveAction = async () => {
-                    try {
-                        const leaveDocRef = doc(db, leavesCollectionPath, editingLeave.id);
-                        await updateDoc(leaveDocRef, { leaveDate: newDate });
-                        showMessage('Leave updated successfully!', 'success');
-                        resetForm();
-                         // Calendar will auto-update via onSnapshot listener
-                    } catch (error) {
-                         console.error("Error updating document: ", error);
-                         showMessage('Failed to update leave.', 'error');
+                const updateLeaveAction = () => {
+                    const index = leaves.findIndex(l => l.id === editingLeave.id);
+                    if (index > -1) {
+                        leaves[index].leaveDate = newDate;
                     }
+                    showMessage('Leave updated!', 'success');
+                    resetForm();
+                    saveAndRender();
                 };
 
                 if (editingLeave) {
-                    const isMovingToSameDate = newDate === editingLeave.leaveDate;
-                    if (isMovingToSameDate) { resetForm(); return; }
-
-                    const leavesOnNewDate = leaves.filter(l => l.leaveDate === newDate).length;
-                    if (leavesOnNewDate >= 2) {
-                        showConfirmation('The new date is at capacity (2+ employees). Are you sure you want to move this leave?', updateLeaveAction);
+                    if (newDate === editingLeave.leaveDate) { resetForm(); return; }
+                    if (leaves.filter(l => l.leaveDate === newDate).length >= 2) {
+                        showConfirmation('The new date is at capacity. Are you sure you want to move this leave?', updateLeaveAction);
                     } else {
-                        await updateLeaveAction();
+                        updateLeaveAction();
                     }
                 } else {
-                    const leavesOnDate = leaves.filter(l => l.leaveDate === newDate).length;
-                    if (leavesOnDate >= 2) {
-                        showConfirmation('This date is at capacity (2+ employees). Are you sure you want to add another person?', addLeaveAction);
+                    if (leaves.filter(l => l.leaveDate === newDate).length >= 2) {
+                        showConfirmation('This date is at capacity. Are you sure you want to add another person?', addLeaveAction);
                     } else {
-                        await addLeaveAction();
+                        addLeaveAction();
                     }
                 }
             };
 
-            const handleCalendarClick = async (event) => {
+            const handleCalendarClick = (event) => {
                 const deleteBtn = event.target.closest('.delete-btn');
                 const employeeEntry = event.target.closest('.employee-entry');
 
                 if (deleteBtn) {
-                    const docId = deleteBtn.dataset.id;
-                    try {
-                        await deleteDoc(doc(db, leavesCollectionPath, docId));
-                        showMessage('Leave entry deleted.', 'success');
-                        if (editingLeave && editingLeave.id === docId) {
-                            resetForm();
-                        }
-                        // Calendar will auto-update via onSnapshot listener
-                    } catch (error) {
-                         console.error("Error deleting document: ", error);
-                         showMessage('Failed to delete leave.', 'error');
-                    }
+                    const leaveId = deleteBtn.dataset.id;
+                    leaves = leaves.filter(l => l.id !== leaveId);
+                    showMessage('Leave entry deleted.', 'success');
+                    if (editingLeave && editingLeave.id === leaveId) resetForm();
+                    saveAndRender();
                 } else if (employeeEntry) {
-                    const id = employeeEntry.dataset.id;
-                    const name = employeeEntry.dataset.name;
-                    const date = employeeEntry.dataset.date;
-                    
-                    editingLeave = { id, employeeName: name, leaveDate: date };
-
-                    formTitle.textContent = 'Update Leave';
-                    submitButton.textContent = 'Update Request';
-                    nameInput.value = name;
-                    nameInput.disabled = true;
-                    dateInput.value = date;
-                    cancelButton.classList.remove('hidden');
-                    nameInput.focus();
+                    editingLeave = leaves.find(l => l.id === employeeEntry.dataset.id);
+                    if (editingLeave) {
+                        formTitle.textContent = 'Update Leave';
+                        submitButton.textContent = 'Update Request';
+                        nameInput.value = editingLeave.employeeName;
+                        nameInput.disabled = true;
+                        dateInput.value = editingLeave.leaveDate;
+                        cancelButton.classList.remove('hidden');
+                        nameInput.focus();
+                    }
                 }
             };
             
@@ -399,29 +314,61 @@
                 const dayCell = event.target.closest('.calendar-day');
                 if (!dayCell) return;
 
-                const date = dayCell.dataset.date;
-                const leavesOnDay = leaves.filter(l => l.leaveDate === date);
-
+                const leavesOnDay = leaves.filter(l => l.leaveDate === dayCell.dataset.date);
                 if (leavesOnDay.length > 0) {
-                    const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-                    const namesHTML = leavesOnDay.map(l => `<li class="py-1">${l.employeeName}</li>`).join('');
-                    tooltip.innerHTML = `
-                        <h4 class="font-bold text-base mb-1 border-b border-gray-600 pb-1">${formattedDate}</h4>
-                        <ul class="list-disc list-inside">${namesHTML}</ul>`;
-                    
-                    const rect = dayCell.getBoundingClientRect();
+                    const date = new Date(dayCell.dataset.date + 'T00:00:00');
+                    const formattedDate = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                    tooltip.innerHTML = `<h4 class="font-bold text-base mb-1 border-b border-gray-600 pb-1">${formattedDate}</h4><ul class="list-disc list-inside">${leavesOnDay.map(l => `<li class="py-1">${l.employeeName}</li>`).join('')}</ul>`;
                     tooltip.style.left = `${event.clientX + 15}px`;
                     tooltip.style.top = `${event.clientY + 15}px`;
-
                     tooltip.classList.add('visible');
                 }
             };
             
-            const handleCalendarMouseOut = () => {
-                tooltip.classList.remove('visible');
+            const handleCalendarMouseOut = () => tooltip.classList.remove('visible');
+            
+            const handleImport = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                        // Basic validation
+                        if (jsonData.every(row => row.employeeName && row.leaveDate)) {
+                            leaves = jsonData.map(row => ({...row, id: row.id || Date.now() + Math.random() }));
+                            saveAndRender();
+                            showMessage('Data imported successfully!', 'success');
+                        } else {
+                            showMessage('Invalid Excel format. Make sure columns are named "employeeName" and "leaveDate".', 'error');
+                        }
+                    } catch (err) {
+                        showMessage('Failed to read the Excel file.', 'error');
+                        console.error(err);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+                event.target.value = ''; // Reset file input
             };
 
-            const handleDownload = () => {
+            const handleExport = () => {
+                if(leaves.length === 0) {
+                    showMessage('No leave data to export.', 'error');
+                    return;
+                }
+                const worksheet = XLSX.utils.json_to_sheet(leaves);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Leaves');
+                XLSX.writeFile(workbook, 'leaves.xlsx');
+            };
+
+            const handlePdfDownload = () => {
                 const { jsPDF } = window.jspdf;
                 const today = new Date();
                 const startRange = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -433,42 +380,26 @@
                 }).sort((a, b) => new Date(a.leaveDate) - new Date(b.leaveDate));
 
                 if (leavesToDownload.length === 0) {
-                    showMessage('No leaves scheduled for the current or next month to download.', 'error');
+                    showMessage('No leaves for the next 2 months to report.', 'error');
                     return;
                 }
 
                 const doc = new jsPDF();
-                
                 const currentMonthName = startRange.toLocaleString('default', { month: 'long' });
-                const nextMonthDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-                const nextMonthName = nextMonthDate.toLocaleString('default', { month: 'long' });
-                const year = today.getFullYear();
+                const nextMonthName = new Date(today.getFullYear(), today.getMonth() + 1, 1).toLocaleString('default', { month: 'long' });
+                const title = `Leave Report: ${currentMonthName} & ${nextMonthName} ${today.getFullYear()}`;
                 
-                const title = `Leave Report: ${currentMonthName} & ${nextMonthName} ${year}`;
-                const filename = `leave_report_${currentMonthName.substring(0,3)}-${nextMonthName.substring(0,3)}_${year}.pdf`;
-
                 doc.setFontSize(18);
                 doc.text(title, 14, 22);
-
-                const tableColumn = ["Employee Name", "Leave Date"];
-                const tableRows = leavesToDownload.map(leave => [leave.employeeName, leave.leaveDate]);
-
                 doc.autoTable({
-                    head: [tableColumn],
-                    body: tableRows,
+                    head: [["Employee Name", "Leave Date"]],
+                    body: leavesToDownload.map(l => [l.employeeName, l.leaveDate]),
                     startY: 30,
                     theme: 'striped',
-                    headStyles: {
-                        fillColor: [22, 160, 133], // Teal
-                        textColor: 255,
-                        fontStyle: 'bold'
-                    },
-                    alternateRowStyles: {
-                        fillColor: [240, 248, 255] // Alice Blue
-                    },
+                    headStyles: { fillColor: [22, 160, 133], textColor: 255, fontStyle: 'bold' },
+                    alternateRowStyles: { fillColor: [240, 248, 255] },
                 });
-
-                doc.save(filename);
+                doc.save(`leave_report.pdf`);
             };
 
             const showMessage = (message, type) => {
@@ -485,16 +416,13 @@
                     setTimeout(() => messageBox.innerHTML = '', 300);
                 }, 4000);
             };
-
-            // --- MODAL FUNCTIONS ---
+            
             let confirmCallback = null;
-
             const showConfirmation = (message, onConfirm) => {
                 modalMessage.textContent = message;
                 confirmationModal.classList.remove('hidden');
                 confirmCallback = onConfirm;
             };
-
             const hideConfirmation = () => {
                 confirmationModal.classList.add('hidden');
                 confirmCallback = null;
@@ -506,22 +434,20 @@
             calendarGrid.addEventListener('mousemove', handleCalendarMouseOver);
             calendarGrid.addEventListener('mouseout', handleCalendarMouseOut);
             cancelButton.addEventListener('click', resetForm);
-            downloadButton.addEventListener('click', handleDownload);
+            importButton.addEventListener('click', () => importFileInput.click());
+            importFileInput.addEventListener('change', handleImport);
+            exportButton.addEventListener('click', handleExport);
+            downloadPdfButton.addEventListener('click', handlePdfDownload);
             modalConfirmBtn.addEventListener('click', () => {
-                if (confirmCallback) {
-                    confirmCallback();
-                }
+                if (confirmCallback) confirmCallback();
                 hideConfirmation();
             });
             modalCancelBtn.addEventListener('click', hideConfirmation);
-
-
             prevBtn.addEventListener('click', () => {
                 currentMonth--;
                 if (currentMonth < 0) { currentMonth = 11; currentYear--; }
                 renderCalendar();
             });
-
             nextBtn.addEventListener('click', () => {
                 currentMonth++;
                 if (currentMonth > 11) { currentMonth = 0; currentYear++; }
@@ -529,9 +455,8 @@
             });
 
             // --- INITIALIZATION ---
-            const todayISO = new Date().toISOString().split('T')[0];
-            dateInput.setAttribute('min', todayISO);
-            renderCalendar(); // Initial render will be empty until Firestore loads
+            dateInput.setAttribute('min', new Date().toISOString().split('T')[0]);
+            renderCalendar();
         });
     </script>
 </body>
