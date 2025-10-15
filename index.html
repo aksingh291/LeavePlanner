@@ -140,8 +140,20 @@
         
         document.addEventListener('DOMContentLoaded', async () => {
             // --- FIREBASE SETUP ---
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-leave-planner';
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO", authDomain: "DEMO", projectId: "DEMO" };
+            // IMPORTANT: Replace this with your own Firebase project configuration.
+            // You can get this from the Firebase Console: Project Settings > General > Your apps > Web app
+            const firebaseConfig = {
+            apiKey: "AIzaSyC3W-5IUN-htJtWY0-g1CMtniM0x5vj6W0",
+            authDomain: "team-leave-planner-1e2d5.firebaseapp.com",
+            projectId: "team-leave-planner-1e2d5",
+            storageBucket: "team-leave-planner-1e2d5.firebasestorage.app",
+            messagingSenderId: "644468744907",
+            appId: "1:644468744907:web:65d26f5d7dcf3cf8b6f14e",
+            measurementId: "G-BL9569JE6E"
+            };
+            
+            // This ID is used for the database path. You can change it if you want to have multiple separate planners.
+            const appId = 'team-leave-planner-01';
 
             const app = initializeApp(firebaseConfig);
             const auth = getAuth(app);
@@ -425,6 +437,7 @@
             });
             
             try {
+                // When hosted on GitHub, __initial_auth_token will be undefined, so it will fall back to signInAnonymously.
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -432,7 +445,7 @@
                 }
             } catch (error) {
                  console.error("Authentication failed:", error);
-                 showMessage('Could not connect to the database. Please refresh.', 'error');
+                 showMessage('Could not connect to the database. Check your Firebase config and security rules.', 'error');
             }
             
             // --- EVENT LISTENERS ---
