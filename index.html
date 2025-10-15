@@ -57,7 +57,7 @@
         <!-- Header Section -->
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Team Leave Planner</h1>
-            <p class="mt-2 text-md text-gray-600">Plan your team's time off. A maximum of two employees can take leave on the same day.</p>
+            <p class="mt-2 text-md text-gray-600">Plan your team's time off. Changes are updated in real-time for all users.</p>
         </header>
 
         <!-- Main Content Grid -->
@@ -145,20 +145,31 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            // --- FIREBASE SETUP ---
+            // These variables are placeholders and will be provided by the environment.
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-leave-planner';
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO", authDomain: "DEMO", projectId: "DEMO" };
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            setLogLevel('debug'); // For more detailed console logs from Firestore
+
             // --- STATE MANAGEMENT ---
             let currentDate = new Date();
             let currentMonth = currentDate.getMonth();
             let currentYear = currentDate.getFullYear();
             let editingLeave = null; 
-            
-            let leaves = JSON.parse(localStorage.getItem('teamLeaves')) || [
-                { employeeName: 'Alex Johnson', leaveDate: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-15` },
-                { employeeName: 'Maria Garcia', leaveDate: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-15` },
-                { employeeName: 'David Smith', leaveDate: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-20` }
-            ];
+            let leaves = []; // This will now be populated by Firestore in real-time
+            let leavesCollectionPath;
 
             // --- DOM ELEMENT REFERENCES ---
             const form = document.getElementById('leaveForm');
@@ -179,10 +190,45 @@
             const modalConfirmBtn = document.getElementById('modalConfirmBtn');
             const modalCancelBtn = document.getElementById('modalCancelBtn');
 
-            // --- CORE FUNCTIONS ---
+            // --- AUTHENTICATION & INITIALIZATION ---
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in.
+                    console.log("User authenticated with UID:", user.uid);
+                    // Set the database path to a shared location for this app instance.
+                    leavesCollectionPath = `artifacts/${appId}/public/data/leaves`;
+                    // Start listening for real-time updates from Firestore
+                    setupLeaveListener();
+                } else {
+                    // User is signed out.
+                     console.log("User is not authenticated.");
+                }
+            });
+            
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                 console.error("Authentication failed:", error);
+                 showMessage('Could not connect to the database. Please refresh.', 'error');
+            }
 
-            const saveLeaves = () => {
-                localStorage.setItem('teamLeaves', JSON.stringify(leaves));
+
+            // --- CORE FUNCTIONS ---
+            
+            const setupLeaveListener = () => {
+                const leavesCollection = collection(db, leavesCollectionPath);
+                onSnapshot(leavesCollection, (snapshot) => {
+                    leaves = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    console.log("Updated leaves from Firestore:", leaves);
+                    renderCalendar();
+                }, (error) => {
+                    console.error("Error fetching leaves:", error);
+                    showMessage('Failed to sync with the database.', 'error');
+                });
             };
 
             const renderCalendar = () => {
@@ -227,10 +273,10 @@
 
                     let employeeListHTML = leavesOnThisDay.map(leave => `
                         <div class="employee-entry group relative flex items-center justify-between text-xs font-medium bg-white/60 px-1.5 py-0.5 rounded-md mt-1 hover:bg-indigo-100" 
-                            data-name="${leave.employeeName}" data-date="${leave.leaveDate}">
+                            data-id="${leave.id}" data-name="${leave.employeeName}" data-date="${leave.leaveDate}">
                             <span class="truncate">${leave.employeeName}</span>
-                            <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition" data-name="${leave.employeeName}" data-date="${leave.leaveDate}">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition" data-id="${leave.id}">
+                                <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>`
                     ).join('');
@@ -253,7 +299,7 @@
                 cancelButton.classList.add('hidden');
             };
 
-            const handleFormSubmit = (event) => {
+            const handleFormSubmit = async (event) => {
                 event.preventDefault();
                 const name = nameInput.value.trim();
                 const newDate = dateInput.value;
@@ -270,78 +316,74 @@
                     return;
                 }
 
-                const addLeaveAction = () => {
-                    leaves.push({ employeeName: name, leaveDate: newDate });
-                    saveLeaves();
-                    showMessage('Leave request submitted successfully!', 'success');
-                    resetForm();
-                    renderCalendar();
+                const addLeaveAction = async () => {
+                    try {
+                        await addDoc(collection(db, leavesCollectionPath), { employeeName: name, leaveDate: newDate });
+                        showMessage('Leave request submitted successfully!', 'success');
+                        resetForm();
+                        // Calendar will auto-update via onSnapshot listener
+                    } catch (error) {
+                        console.error("Error adding document: ", error);
+                        showMessage('Failed to submit leave.', 'error');
+                    }
                 };
 
-                const updateLeaveAction = () => {
-                    const leaveToUpdate = leaves.find(l => l.employeeName === editingLeave.employeeName && l.leaveDate === editingLeave.leaveDate);
-                    if (leaveToUpdate) {
-                        leaveToUpdate.leaveDate = newDate;
-                        saveLeaves();
+                const updateLeaveAction = async () => {
+                    try {
+                        const leaveDocRef = doc(db, leavesCollectionPath, editingLeave.id);
+                        await updateDoc(leaveDocRef, { leaveDate: newDate });
                         showMessage('Leave updated successfully!', 'success');
                         resetForm();
-                        renderCalendar();
+                         // Calendar will auto-update via onSnapshot listener
+                    } catch (error) {
+                         console.error("Error updating document: ", error);
+                         showMessage('Failed to update leave.', 'error');
                     }
                 };
 
                 if (editingLeave) {
                     const isMovingToSameDate = newDate === editingLeave.leaveDate;
-                    if (isMovingToSameDate) {
-                        // No changes to make if date is the same
-                        resetForm();
-                        return;
-                    }
+                    if (isMovingToSameDate) { resetForm(); return; }
 
                     const leavesOnNewDate = leaves.filter(l => l.leaveDate === newDate).length;
                     if (leavesOnNewDate >= 2) {
-                        showConfirmation(
-                            'The new date is at capacity (2+ employees). Are you sure you want to move this leave?',
-                            updateLeaveAction
-                        );
+                        showConfirmation('The new date is at capacity (2+ employees). Are you sure you want to move this leave?', updateLeaveAction);
                     } else {
-                        updateLeaveAction();
+                        await updateLeaveAction();
                     }
                 } else {
                     const leavesOnDate = leaves.filter(l => l.leaveDate === newDate).length;
                     if (leavesOnDate >= 2) {
-                        showConfirmation(
-                            'This date is at capacity (2+ employees). Are you sure you want to add another person?',
-                            addLeaveAction
-                        );
+                        showConfirmation('This date is at capacity (2+ employees). Are you sure you want to add another person?', addLeaveAction);
                     } else {
-                        addLeaveAction();
+                        await addLeaveAction();
                     }
                 }
             };
 
-            const handleCalendarClick = (event) => {
+            const handleCalendarClick = async (event) => {
                 const deleteBtn = event.target.closest('.delete-btn');
                 const employeeEntry = event.target.closest('.employee-entry');
 
                 if (deleteBtn) {
-                    const name = deleteBtn.dataset.name;
-                    const date = deleteBtn.dataset.date;
-                    const leaveIndex = leaves.findIndex(l => l.employeeName === name && l.leaveDate === date);
-
-                    if (leaveIndex > -1) {
-                        leaves.splice(leaveIndex, 1);
-                        saveLeaves();
+                    const docId = deleteBtn.dataset.id;
+                    try {
+                        await deleteDoc(doc(db, leavesCollectionPath, docId));
                         showMessage('Leave entry deleted.', 'success');
-                        if (editingLeave && editingLeave.employeeName === name && editingLeave.leaveDate === date) {
+                        if (editingLeave && editingLeave.id === docId) {
                             resetForm();
                         }
-                        renderCalendar();
+                        // Calendar will auto-update via onSnapshot listener
+                    } catch (error) {
+                         console.error("Error deleting document: ", error);
+                         showMessage('Failed to delete leave.', 'error');
                     }
                 } else if (employeeEntry) {
+                    const id = employeeEntry.dataset.id;
                     const name = employeeEntry.dataset.name;
                     const date = employeeEntry.dataset.date;
                     
-                    editingLeave = { employeeName: name, leaveDate: date };
+                    editingLeave = { id, employeeName: name, leaveDate: date };
 
                     formTitle.textContent = 'Update Leave';
                     submitButton.textContent = 'Update Request';
@@ -489,7 +531,7 @@
             // --- INITIALIZATION ---
             const todayISO = new Date().toISOString().split('T')[0];
             dateInput.setAttribute('min', todayISO);
-            renderCalendar();
+            renderCalendar(); // Initial render will be empty until Firestore loads
         });
     </script>
 </body>
