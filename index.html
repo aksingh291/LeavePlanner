@@ -6,8 +6,7 @@
     <title>Team Leave Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Libraries for Excel and PDF file generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Libraries for PDF file generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -48,14 +47,17 @@
         <!-- Header Section -->
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Team Leave Planner</h1>
-            <p class="mt-2 text-md text-gray-600">Import the latest Excel file to start, and export your changes to share.</p>
+            <p class="mt-2 text-md text-gray-600">Plan your team's time off. Changes are updated in real-time for all users.</p>
         </header>
 
         <!-- Main Content Grid -->
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             <!-- Left Column: Leave Request Form -->
-            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-fit">
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-fit relative">
+                <div id="formLoadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
+                    <p class="text-gray-600 font-semibold animate-pulse">Connecting...</p>
+                </div>
                 <h2 id="formTitle" class="text-xl font-semibold mb-4 text-gray-800">Request Leave</h2>
                 <form id="leaveForm" class="space-y-4">
                     <div>
@@ -80,8 +82,11 @@
             </div>
 
             <!-- Right Column: Calendar View -->
-            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg border border-gray-200 relative">
+                 <div id="calendarLoadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
+                    <p class="text-gray-600 font-semibold animate-pulse">Loading Calendar...</p>
+                </div>
+                <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center">
                         <button id="prevMonth" class="p-2 rounded-full hover:bg-gray-100 transition">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -91,19 +96,10 @@
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </button>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <input type="file" id="importFile" class="hidden" accept=".xlsx, .xls">
-                        <button id="importButton" class="flex items-center space-x-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            <span>Import</span>
-                        </button>
-                         <button id="exportButton" class="flex items-center space-x-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
-                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            <span>Export</span>
-                        </button>
-                        <button id="downloadPdfButton" class="flex items-center space-x-1 bg-red-500 text-white font-semibold py-2 px-3 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition">
+                    <div>
+                        <button id="downloadPdfButton" class="flex items-center space-x-2 bg-red-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-transform transform hover:scale-105">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zm5 2v4h2V5h-2zm-2 6v2h6v-2H7z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
-                            <span class="hidden sm:inline">PDF</span>
+                            <span class="hidden sm:inline">Download Report</span>
                         </button>
                     </div>
                 </div>
@@ -136,14 +132,29 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            // --- FIREBASE SETUP ---
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-leave-planner';
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO", authDomain: "DEMO", projectId: "DEMO" };
+
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            setLogLevel('debug');
+
             // --- STATE MANAGEMENT ---
             let currentDate = new Date();
             let currentMonth = currentDate.getMonth();
             let currentYear = currentDate.getFullYear();
             let editingLeave = null; 
-            let leaves = JSON.parse(localStorage.getItem('team-leaves')) || [];
+            let leaves = [];
+            let leavesCollectionPath;
 
             // --- DOM ELEMENT REFERENCES ---
             const form = document.getElementById('leaveForm');
@@ -157,22 +168,29 @@
             const monthYearDisplay = document.getElementById('currentMonthYear');
             const prevBtn = document.getElementById('prevMonth');
             const nextBtn = document.getElementById('nextMonth');
-            const importButton = document.getElementById('importButton');
-            const importFileInput = document.getElementById('importFile');
-            const exportButton = document.getElementById('exportButton');
             const downloadPdfButton = document.getElementById('downloadPdfButton');
             const tooltip = document.getElementById('tooltip');
             const confirmationModal = document.getElementById('confirmationModal');
             const modalMessage = document.getElementById('modalMessage');
             const modalConfirmBtn = document.getElementById('modalConfirmBtn');
             const modalCancelBtn = document.getElementById('modalCancelBtn');
+            const formLoadingOverlay = document.getElementById('formLoadingOverlay');
+            const calendarLoadingOverlay = document.getElementById('calendarLoadingOverlay');
 
-            // --- CORE FUNCTIONS ---
-            const saveAndRender = () => {
-                localStorage.setItem('team-leaves', JSON.stringify(leaves));
-                renderCalendar();
+            // --- CORE FUNCTIONS (DEFINED BEFORE USE) ---
+            const setupLeaveListener = () => {
+                const leavesCollection = collection(db, leavesCollectionPath);
+                onSnapshot(leavesCollection, (snapshot) => {
+                    leaves = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderCalendar();
+                    if (calendarLoadingOverlay) calendarLoadingOverlay.style.display = 'none';
+                }, (error) => {
+                    console.error("Error fetching leaves:", error);
+                    showMessage('Failed to sync with the database.', 'error');
+                     if (calendarLoadingOverlay) calendarLoadingOverlay.innerHTML = '<p class="text-red-600 font-semibold">Data Sync Failed</p>';
+                });
             };
-            
+
             const renderCalendar = () => {
                 calendarGrid.innerHTML = ''; 
                 const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
@@ -237,37 +255,41 @@
                 cancelButton.classList.add('hidden');
             };
             
-            const handleFormSubmit = (event) => {
+            const handleFormSubmit = async (event) => {
                 event.preventDefault();
                 const name = nameInput.value.trim();
                 const newDate = dateInput.value;
 
                 if (!name || !newDate) {
-                    showMessage('Please fill out both fields.', 'error');
-                    return;
+                    showMessage('Please fill out both fields.', 'error'); return;
                 }
                 const today = new Date();
                 today.setHours(0,0,0,0);
                 if (new Date(newDate + 'T00:00:00') < today) {
-                    showMessage('Cannot book leave for a past date.', 'error');
-                    return;
+                    showMessage('Cannot book leave for a past date.', 'error'); return;
                 }
 
-                const addLeaveAction = () => {
-                    leaves.push({ id: Date.now().toString(), employeeName: name, leaveDate: newDate });
-                    showMessage('Leave request submitted!', 'success');
-                    resetForm();
-                    saveAndRender();
+                const addLeaveAction = async () => {
+                    try {
+                        await addDoc(collection(db, leavesCollectionPath), { employeeName: name, leaveDate: newDate });
+                        showMessage('Leave request submitted!', 'success');
+                        resetForm();
+                    } catch (error) {
+                        console.error("Error adding document: ", error);
+                        showMessage('Failed to submit leave.', 'error');
+                    }
                 };
 
-                const updateLeaveAction = () => {
-                    const index = leaves.findIndex(l => l.id === editingLeave.id);
-                    if (index > -1) {
-                        leaves[index].leaveDate = newDate;
+                const updateLeaveAction = async () => {
+                    try {
+                        const leaveDocRef = doc(db, leavesCollectionPath, editingLeave.id);
+                        await updateDoc(leaveDocRef, { leaveDate: newDate });
+                        showMessage('Leave updated!', 'success');
+                        resetForm();
+                    } catch (error) {
+                         console.error("Error updating document: ", error);
+                         showMessage('Failed to update leave.', 'error');
                     }
-                    showMessage('Leave updated!', 'success');
-                    resetForm();
-                    saveAndRender();
                 };
 
                 if (editingLeave) {
@@ -275,27 +297,31 @@
                     if (leaves.filter(l => l.leaveDate === newDate).length >= 2) {
                         showConfirmation('The new date is at capacity. Are you sure you want to move this leave?', updateLeaveAction);
                     } else {
-                        updateLeaveAction();
+                        await updateLeaveAction();
                     }
                 } else {
                     if (leaves.filter(l => l.leaveDate === newDate).length >= 2) {
                         showConfirmation('This date is at capacity. Are you sure you want to add another person?', addLeaveAction);
                     } else {
-                        addLeaveAction();
+                        await addLeaveAction();
                     }
                 }
             };
 
-            const handleCalendarClick = (event) => {
+            const handleCalendarClick = async (event) => {
                 const deleteBtn = event.target.closest('.delete-btn');
                 const employeeEntry = event.target.closest('.employee-entry');
 
                 if (deleteBtn) {
-                    const leaveId = deleteBtn.dataset.id;
-                    leaves = leaves.filter(l => l.id !== leaveId);
-                    showMessage('Leave entry deleted.', 'success');
-                    if (editingLeave && editingLeave.id === leaveId) resetForm();
-                    saveAndRender();
+                    const docId = deleteBtn.dataset.id;
+                    try {
+                        await deleteDoc(doc(db, leavesCollectionPath, docId));
+                        showMessage('Leave entry deleted.', 'success');
+                        if (editingLeave && editingLeave.id === docId) resetForm();
+                    } catch (error) {
+                         console.error("Error deleting document: ", error);
+                         showMessage('Failed to delete leave.', 'error');
+                    }
                 } else if (employeeEntry) {
                     editingLeave = leaves.find(l => l.id === employeeEntry.dataset.id);
                     if (editingLeave) {
@@ -327,61 +353,17 @@
             
             const handleCalendarMouseOut = () => tooltip.classList.remove('visible');
             
-            const handleImport = (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const sheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[sheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-                        // Basic validation
-                        if (jsonData.every(row => row.employeeName && row.leaveDate)) {
-                            leaves = jsonData.map(row => ({...row, id: row.id || Date.now() + Math.random() }));
-                            saveAndRender();
-                            showMessage('Data imported successfully!', 'success');
-                        } else {
-                            showMessage('Invalid Excel format. Make sure columns are named "employeeName" and "leaveDate".', 'error');
-                        }
-                    } catch (err) {
-                        showMessage('Failed to read the Excel file.', 'error');
-                        console.error(err);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-                event.target.value = ''; // Reset file input
-            };
-
-            const handleExport = () => {
-                if(leaves.length === 0) {
-                    showMessage('No leave data to export.', 'error');
-                    return;
-                }
-                const worksheet = XLSX.utils.json_to_sheet(leaves);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, 'Leaves');
-                XLSX.writeFile(workbook, 'leaves.xlsx');
-            };
-
             const handlePdfDownload = () => {
                 const { jsPDF } = window.jspdf;
                 const today = new Date();
                 const startRange = new Date(today.getFullYear(), today.getMonth(), 1);
                 const endRange = new Date(today.getFullYear(), today.getMonth() + 2, 0);
 
-                const leavesToDownload = leaves.filter(leave => {
-                    const leaveDate = new Date(leave.leaveDate + 'T00:00:00');
-                    return leaveDate >= startRange && leaveDate <= endRange;
-                }).sort((a, b) => new Date(a.leaveDate) - new Date(b.leaveDate));
+                const leavesToDownload = leaves.filter(leave => new Date(leave.leaveDate + 'T00:00:00') >= startRange && new Date(leave.leaveDate + 'T00:00:00') <= endRange)
+                                                .sort((a, b) => new Date(a.leaveDate) - new Date(b.leaveDate));
 
                 if (leavesToDownload.length === 0) {
-                    showMessage('No leaves for the next 2 months to report.', 'error');
-                    return;
+                    showMessage('No leaves for the next 2 months to report.', 'error'); return;
                 }
 
                 const doc = new jsPDF();
@@ -428,15 +410,37 @@
                 confirmCallback = null;
             };
 
+            // --- AUTHENTICATION & INITIALIZATION ---
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    console.log("User authenticated with UID:", user.uid);
+                    leavesCollectionPath = `artifacts/${appId}/public/data/leaves`;
+                    setupLeaveListener();
+                    if (formLoadingOverlay) formLoadingOverlay.style.display = 'none';
+                } else {
+                    console.log("User not authenticated.");
+                    if(formLoadingOverlay) formLoadingOverlay.innerHTML = '<p class="text-red-600 font-semibold">Connection Failed</p>';
+                    if(calendarLoadingOverlay) calendarLoadingOverlay.innerHTML = '<p class="text-red-600 font-semibold">Connection Failed</p>';
+                }
+            });
+            
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                 console.error("Authentication failed:", error);
+                 showMessage('Could not connect to the database. Please refresh.', 'error');
+            }
+            
             // --- EVENT LISTENERS ---
             form.addEventListener('submit', handleFormSubmit);
             calendarGrid.addEventListener('click', handleCalendarClick);
             calendarGrid.addEventListener('mousemove', handleCalendarMouseOver);
             calendarGrid.addEventListener('mouseout', handleCalendarMouseOut);
             cancelButton.addEventListener('click', resetForm);
-            importButton.addEventListener('click', () => importFileInput.click());
-            importFileInput.addEventListener('change', handleImport);
-            exportButton.addEventListener('click', handleExport);
             downloadPdfButton.addEventListener('click', handlePdfDownload);
             modalConfirmBtn.addEventListener('click', () => {
                 if (confirmCallback) confirmCallback();
@@ -456,7 +460,6 @@
 
             // --- INITIALIZATION ---
             dateInput.setAttribute('min', new Date().toISOString().split('T')[0]);
-            renderCalendar();
         });
     </script>
 </body>
