@@ -62,7 +62,18 @@
                 <form id="leaveForm" class="space-y-4">
                     <div>
                         <label for="employeeName" class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
-                        <input type="text" id="employeeName" placeholder="Enter your full name" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition disabled:bg-gray-100">
+                        <input type="text" id="employeeName" list="employee-names" placeholder="Select or type a name" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition disabled:bg-gray-100">
+                        <datalist id="employee-names">
+                            <option value="Sujithra"></option>
+                            <option value="Deepshika"></option>
+                            <option value="Vivek"></option>
+                            <option value="Surjeet"></option>
+                            <option value="Ravi"></option>
+                            <option value="Akshay"></option>
+                            <option value="Harshita"></option>
+                            <option value="Nilesh"></option>
+                            <option value="Monika"></option>
+                        </datalist>
                     </div>
                     <div>
                         <label for="leaveDate" class="block text-sm font-medium text-gray-700 mb-1">Leave Date</label>
@@ -120,7 +131,7 @@
                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
                      <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 </div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Confirmation Required</h3>
+                <h3 id="modalTitle" class="text-lg leading-6 font-medium text-gray-900 mt-2">Confirmation Required</h3>
                 <div class="mt-2 px-7 py-3">
                     <p id="modalMessage" class="text-sm text-gray-500"></p>
                 </div>
@@ -136,23 +147,26 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setLogLevel, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         document.addEventListener('DOMContentLoaded', async () => {
             // --- FIREBASE SETUP ---
-            // IMPORTANT: Replace this with your own Firebase project configuration.
-            // You can get this from the Firebase Console: Project Settings > General > Your apps > Web app
-            const firebaseConfig = {
-            apiKey: "AIzaSyC3W-5IUN-htJtWY0-g1CMtniM0x5vj6W0",
-            authDomain: "team-leave-planner-1e2d5.firebaseapp.com",
-            projectId: "team-leave-planner-1e2d5",
-            storageBucket: "team-leave-planner-1e2d5.firebasestorage.app",
-            messagingSenderId: "644468744907",
-            appId: "1:644468744907:web:65d26f5d7dcf3cf8b6f14e",
-            measurementId: "G-BL9569JE6E"
+            // This hardcoded config is used as a fallback when hosting on GitHub Pages or other external sites.
+            const userProvidedConfig = {
+                apiKey: "AIzaSyC3W-5IUN-htJtWY0-g1CMtniM0x5vj6W0",
+                authDomain: "team-leave-planner-1e2d5.firebaseapp.com",
+                projectId: "team-leave-planner-1e2d5",
+                storageBucket: "team-leave-planner-1e2d5.appspot.com",
+                messagingSenderId: "644468744907",
+                appId: "1:644468744907:web:65d26f5d7dcf3cf8b6f14e",
+                measurementId: "G-BL9569JE6E"
             };
+
+            // Use environment-provided config if available (in the dev environment), otherwise fall back to the user-provided one.
+            const firebaseConfig = typeof __firebase_config !== 'undefined'
+                ? JSON.parse(__firebase_config)
+                : userProvidedConfig;
             
-            // This ID is used for the database path. You can change it if you want to have multiple separate planners.
             const appId = 'team-leave-planner-01';
 
             const app = initializeApp(firebaseConfig);
@@ -162,6 +176,8 @@
 
             // --- STATE MANAGEMENT ---
             let currentDate = new Date();
+            currentDate.setMonth(9); // October
+            currentDate.setFullYear(2025);
             let currentMonth = currentDate.getMonth();
             let currentYear = currentDate.getFullYear();
             let editingLeave = null; 
@@ -183,6 +199,7 @@
             const downloadPdfButton = document.getElementById('downloadPdfButton');
             const tooltip = document.getElementById('tooltip');
             const confirmationModal = document.getElementById('confirmationModal');
+            const modalTitle = document.getElementById('modalTitle');
             const modalMessage = document.getElementById('modalMessage');
             const modalConfirmBtn = document.getElementById('modalConfirmBtn');
             const modalCancelBtn = document.getElementById('modalCancelBtn');
@@ -190,6 +207,45 @@
             const calendarLoadingOverlay = document.getElementById('calendarLoadingOverlay');
 
             // --- CORE FUNCTIONS (DEFINED BEFORE USE) ---
+            const seedInitialData = async () => {
+                const leavesCollection = collection(db, leavesCollectionPath);
+                const snapshot = await getDocs(leavesCollection);
+                if (snapshot.empty) {
+                    console.log("Database is empty. Seeding initial data...");
+                    const initialLeaves = [
+                        { employeeName: "Sujithra", leaveDate: "2025-10-20" },
+                        { employeeName: "Sujithra", leaveDate: "2025-10-23" },
+                        { employeeName: "Deepshika", leaveDate: "2025-10-15" },
+                        { employeeName: "Deepshika", leaveDate: "2025-10-20" },
+                        { employeeName: "Deepshika", leaveDate: "2025-10-22" },
+                        { employeeName: "Deepshika", leaveDate: "2025-10-28" },
+                        { employeeName: "Vivek", leaveDate: "2025-10-21" },
+                        { employeeName: "Vivek", leaveDate: "2025-10-22" },
+                        { employeeName: "Vivek", leaveDate: "2025-11-01" },
+                        { employeeName: "Vivek", leaveDate: "2025-11-02" },
+                        { employeeName: "Surjeet", leaveDate: "2025-10-21" },
+                        { employeeName: "Surjeet", leaveDate: "2025-10-22" },
+                        { employeeName: "Surjeet", leaveDate: "2025-10-23" },
+                        { employeeName: "Ravi", leaveDate: "2025-10-21" },
+                        { employeeName: "Akshay", leaveDate: "2025-10-21" },
+                        { employeeName: "Akshay", leaveDate: "2025-10-27" },
+                        { employeeName: "Harshita", leaveDate: "2025-10-16" },
+                        { employeeName: "Harshita", leaveDate: "2025-10-21" },
+                        { employeeName: "Harshita", leaveDate: "2025-10-27" },
+                        { employeeName: "Nilesh", leaveDate: "2025-10-21" },
+                        { employeeName: "Monika", leaveDate: "2025-10-22" },
+                        { employeeName: "Monika", leaveDate: "2025-10-23" },
+                        { employeeName: "Monika", leaveDate: "2025-10-25" },
+                    ];
+                    for (const leave of initialLeaves) {
+                        await addDoc(leavesCollection, leave);
+                    }
+                    console.log("Initial data seeded.");
+                } else {
+                    console.log("Database already contains data. Skipping seed.");
+                }
+            };
+
             const setupLeaveListener = () => {
                 const leavesCollection = collection(db, leavesCollectionPath);
                 onSnapshot(leavesCollection, (snapshot) => {
@@ -198,8 +254,12 @@
                     if (calendarLoadingOverlay) calendarLoadingOverlay.style.display = 'none';
                 }, (error) => {
                     console.error("Error fetching leaves:", error);
-                    showMessage('Failed to sync with the database.', 'error');
-                     if (calendarLoadingOverlay) calendarLoadingOverlay.innerHTML = '<p class="text-red-600 font-semibold">Data Sync Failed</p>';
+                    let errorMsg = 'Failed to sync with the database.';
+                    if (error.code === 'permission-denied') {
+                        errorMsg = 'Permission Denied. Please check your Firestore security rules in the Firebase Console.';
+                    }
+                    showMessage(errorMsg, 'error');
+                    if (calendarLoadingOverlay) calendarLoadingOverlay.innerHTML = `<p class="text-red-600 font-semibold text-center">${errorMsg}</p>`;
                 });
             };
 
@@ -306,33 +366,43 @@
 
                 if (editingLeave) {
                     if (newDate === editingLeave.leaveDate) { resetForm(); return; }
-                    if (leaves.filter(l => l.leaveDate === newDate).length >= 2) {
-                        showConfirmation('The new date is at capacity. Are you sure you want to move this leave?', updateLeaveAction);
+                    if (leaves.filter(l => l.leaveDate === newDate && l.id !== editingLeave.id).length >= 2) {
+                        showConfirmation('Capacity Warning', 'The new date is at capacity. Are you sure you want to move this leave?', updateLeaveAction);
                     } else {
                         await updateLeaveAction();
                     }
                 } else {
                     if (leaves.filter(l => l.leaveDate === newDate).length >= 2) {
-                        showConfirmation('This date is at capacity. Are you sure you want to add another person?', addLeaveAction);
+                        showConfirmation('Capacity Warning', 'This date is at capacity. Are you sure you want to add another person?', addLeaveAction);
                     } else {
                         await addLeaveAction();
                     }
                 }
             };
 
-            const handleCalendarClick = async (event) => {
+            const handleCalendarClick = (event) => {
                 const deleteBtn = event.target.closest('.delete-btn');
                 const employeeEntry = event.target.closest('.employee-entry');
 
                 if (deleteBtn) {
                     const docId = deleteBtn.dataset.id;
-                    try {
-                        await deleteDoc(doc(db, leavesCollectionPath, docId));
-                        showMessage('Leave entry deleted.', 'success');
-                        if (editingLeave && editingLeave.id === docId) resetForm();
-                    } catch (error) {
-                         console.error("Error deleting document: ", error);
-                         showMessage('Failed to delete leave.', 'error');
+                    const leaveToDelete = leaves.find(l => l.id === docId);
+                    if (leaveToDelete) {
+                        const deleteAction = async () => {
+                            try {
+                                await deleteDoc(doc(db, leavesCollectionPath, docId));
+                                showMessage('Leave entry deleted.', 'success');
+                                if (editingLeave && editingLeave.id === docId) resetForm();
+                            } catch (error) {
+                                console.error("Error deleting document: ", error);
+                                showMessage('Failed to delete leave.', 'error');
+                            }
+                        };
+                        showConfirmation(
+                            'Confirm Deletion', 
+                            `Are you sure you want to delete the leave for ${leaveToDelete.employeeName} on ${leaveToDelete.leaveDate}?`, 
+                            deleteAction
+                        );
                     }
                 } else if (employeeEntry) {
                     editingLeave = leaves.find(l => l.id === employeeEntry.dataset.id);
@@ -371,12 +441,34 @@
                 const startRange = new Date(today.getFullYear(), today.getMonth(), 1);
                 const endRange = new Date(today.getFullYear(), today.getMonth() + 2, 0);
 
-                const leavesToDownload = leaves.filter(leave => new Date(leave.leaveDate + 'T00:00:00') >= startRange && new Date(leave.leaveDate + 'T00:00:00') <= endRange)
-                                                .sort((a, b) => new Date(a.leaveDate) - new Date(b.leaveDate));
+                const leavesToDownload = leaves.filter(leave => {
+                    const leaveDate = new Date(leave.leaveDate + 'T00:00:00');
+                    return leaveDate >= startRange && leaveDate <= endRange;
+                });
 
                 if (leavesToDownload.length === 0) {
-                    showMessage('No leaves for the next 2 months to report.', 'error'); return;
+                    showMessage('No leaves for the current or next month to report.', 'error');
+                    return;
                 }
+
+                const groupedLeaves = leavesToDownload.reduce((acc, leave) => {
+                    if (!acc[leave.leaveDate]) {
+                        const date = new Date(leave.leaveDate + 'T00:00:00');
+                        acc[leave.leaveDate] = {
+                            day: date.toLocaleDateString('en-US', { weekday: 'long' }),
+                            names: []
+                        };
+                    }
+                    acc[leave.leaveDate].names.push(leave.employeeName);
+                    return acc;
+                }, {});
+
+                const sortedDates = Object.keys(groupedLeaves).sort();
+
+                const tableBody = sortedDates.map(date => {
+                    const { day, names } = groupedLeaves[date];
+                    return [date, day, names.join(', ')];
+                });
 
                 const doc = new jsPDF();
                 const currentMonthName = startRange.toLocaleString('default', { month: 'long' });
@@ -386,14 +478,18 @@
                 doc.setFontSize(18);
                 doc.text(title, 14, 22);
                 doc.autoTable({
-                    head: [["Employee Name", "Leave Date"]],
-                    body: leavesToDownload.map(l => [l.employeeName, l.leaveDate]),
+                    head: [["Date", "Day", "Employees on Leave"]],
+                    body: tableBody,
                     startY: 30,
                     theme: 'striped',
                     headStyles: { fillColor: [22, 160, 133], textColor: 255, fontStyle: 'bold' },
                     alternateRowStyles: { fillColor: [240, 248, 255] },
+                    didDrawPage: (data) => {
+                        doc.setFontSize(10);
+                        doc.text('Page ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
+                    }
                 });
-                doc.save(`leave_report.pdf`);
+                doc.save(`leave_report_${currentMonthName}_${nextMonthName}.pdf`);
             };
 
             const showMessage = (message, type) => {
@@ -412,7 +508,8 @@
             };
             
             let confirmCallback = null;
-            const showConfirmation = (message, onConfirm) => {
+            const showConfirmation = (title, message, onConfirm) => {
+                modalTitle.textContent = title;
                 modalMessage.textContent = message;
                 confirmationModal.classList.remove('hidden');
                 confirmCallback = onConfirm;
@@ -423,12 +520,24 @@
             };
 
             // --- AUTHENTICATION & INITIALIZATION ---
-            onAuthStateChanged(auth, (user) => {
+            onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    console.log("User authenticated with UID:", user.uid);
-                    leavesCollectionPath = `artifacts/${appId}/public/data/leaves`;
-                    setupLeaveListener();
-                    if (formLoadingOverlay) formLoadingOverlay.style.display = 'none';
+                    try {
+                        console.log("User authenticated with UID:", user.uid);
+                        leavesCollectionPath = `artifacts/${appId}/public/data/leaves`;
+                        await seedInitialData();
+                        setupLeaveListener();
+                        if (formLoadingOverlay) formLoadingOverlay.style.display = 'none';
+                    } catch (error) {
+                        console.error("Firestore initialization failed:", error);
+                        let errorMsg = 'Failed to load data.';
+                        if (error.code === 'permission-denied') {
+                            errorMsg = 'Permission Denied. Please check your Firestore security rules in the Firebase Console.';
+                        }
+                        showMessage(errorMsg, 'error');
+                        if (formLoadingOverlay) formLoadingOverlay.innerHTML = `<p class="text-red-600 font-semibold">${errorMsg}</p>`;
+                        if (calendarLoadingOverlay) calendarLoadingOverlay.innerHTML = `<p class="text-red-600 font-semibold text-center">${errorMsg}</p>`;
+                    }
                 } else {
                     console.log("User not authenticated.");
                     if(formLoadingOverlay) formLoadingOverlay.innerHTML = '<p class="text-red-600 font-semibold">Connection Failed</p>';
@@ -437,8 +546,9 @@
             });
             
             try {
-                // When hosted on GitHub, __initial_auth_token will be undefined, so it will fall back to signInAnonymously.
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                // Use custom token ONLY if the environment provides it AND the environment-specific config is being used.
+                // Otherwise, always sign in anonymously.
+                if (typeof __firebase_config !== 'undefined' && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
