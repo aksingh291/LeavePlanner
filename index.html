@@ -38,12 +38,43 @@
             opacity: 1;
             transform: scale(1);
         }
+        /* Style for masked input */
+        #userIdInput {
+            -webkit-text-security: disc;
+            text-security: disc;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <div id="app" class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="fixed inset-0 bg-gray-100 z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+        <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+            <div class="text-center">
+                <h1 class="text-2xl font-bold text-gray-900">Team Leave Planner</h1>
+                <p class="mt-2 text-sm text-gray-500">Please validate your User ID to continue.</p>
+            </div>
+            <form id="loginForm" class="mt-8 space-y-6">
+                <div>
+                    <label for="userIdInput" class="block text-sm font-medium text-gray-700">User ID</label>
+                    <div class="mt-1">
+                        <input id="userIdInput" placeholder="work-email-id" name="userid" type="password" autocomplete="off" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <button type="button" id="validateBtn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Validate
+                    </button>
+                    <button type="button" id="viewPlannerBtn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hidden">
+                        View Planner
+                    </button>
+                </div>
+                <p id="loginMessage" class="text-center text-sm font-medium"></p>
+            </form>
+        </div>
+    </div>
 
+    <div id="app" class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl hidden">
         <!-- Header Section -->
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Team Leave Planner</h1>
@@ -52,44 +83,54 @@
 
         <!-- Main Content Grid -->
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            <!-- Left Column: Leave Request Form -->
-            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-fit relative">
-                <div id="formLoadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
-                    <p class="text-gray-600 font-semibold animate-pulse">Connecting...</p>
+            <!-- Left Column Container -->
+            <div class="lg:col-span-1 space-y-8">
+                <!-- Leave Request Form -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-fit relative">
+                    <div id="formLoadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
+                        <p class="text-gray-600 font-semibold animate-pulse">Connecting...</p>
+                    </div>
+                    <h2 id="formTitle" class="text-xl font-semibold mb-4 text-gray-800">Request Leave</h2>
+                    <form id="leaveForm" class="space-y-4">
+                        <div>
+                            <label for="employeeName" class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
+                            <input type="text" id="employeeName" list="employee-names" placeholder="Select or type a name" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition disabled:bg-gray-100">
+                            <datalist id="employee-names">
+                                <option value="Sujithra"></option>
+                                <option value="Deepshika"></option>
+                                <option value="Vivek"></option>
+                                <option value="Surjeet"></option>
+                                <option value="Ravi"></option>
+                                <option value="Akshay"></option>
+                                <option value="Harshita"></option>
+                                <option value="Nilesh"></option>
+                                <option value="Monika"></option>
+                            </datalist>
+                        </div>
+                        <div>
+                            <label for="leaveDate" class="block text-sm font-medium text-gray-700 mb-1">Leave Date</label>
+                            <input type="date" id="leaveDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        </div>
+                        <div class="flex space-x-2">
+                            <button type="submit" id="submitButton" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
+                                Submit Request
+                            </button>
+                            <button type="button" id="cancelButton" class="w-full bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition hidden">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                    <!-- Message Box for notifications -->
+                    <div id="messageBox" class="mt-4 text-sm font-medium"></div>
                 </div>
-                <h2 id="formTitle" class="text-xl font-semibold mb-4 text-gray-800">Request Leave</h2>
-                <form id="leaveForm" class="space-y-4">
-                    <div>
-                        <label for="employeeName" class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
-                        <input type="text" id="employeeName" list="employee-names" placeholder="Select or type a name" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition disabled:bg-gray-100">
-                        <datalist id="employee-names">
-                            <option value="Sujithra"></option>
-                            <option value="Deepshika"></option>
-                            <option value="Vivek"></option>
-                            <option value="Surjeet"></option>
-                            <option value="Ravi"></option>
-                            <option value="Akshay"></option>
-                            <option value="Harshita"></option>
-                            <option value="Nilesh"></option>
-                            <option value="Monika"></option>
-                        </datalist>
+
+                <!-- Leave Summary -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-fit">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Leave Summary</h2>
+                    <div id="leaveSummary" class="space-y-2 max-h-60 overflow-y-auto">
+                        <p class="text-gray-500 animate-pulse">Loading summary...</p>
                     </div>
-                    <div>
-                        <label for="leaveDate" class="block text-sm font-medium text-gray-700 mb-1">Leave Date</label>
-                        <input type="date" id="leaveDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                    </div>
-                    <div class="flex space-x-2">
-                        <button type="submit" id="submitButton" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
-                            Submit Request
-                        </button>
-                        <button type="button" id="cancelButton" class="w-full bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition hidden">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-                <!-- Message Box for notifications -->
-                <div id="messageBox" class="mt-4 text-sm font-medium"></div>
+                </div>
             </div>
 
             <!-- Right Column: Calendar View -->
@@ -149,440 +190,522 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setLogLevel, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        document.addEventListener('DOMContentLoaded', async () => {
-            // --- FIREBASE SETUP ---
-            // This hardcoded config is used as a fallback when hosting on GitHub Pages or other external sites.
-            const userProvidedConfig = {
-                apiKey: "AIzaSyC3W-5IUN-htJtWY0-g1CMtniM0x5vj6W0",
-                authDomain: "team-leave-planner-1e2d5.firebaseapp.com",
-                projectId: "team-leave-planner-1e2d5",
-                storageBucket: "team-leave-planner-1e2d5.appspot.com",
-                messagingSenderId: "644468744907",
-                appId: "1:644468744907:web:65d26f5d7dcf3cf8b6f14e",
-                measurementId: "G-BL9569JE6E"
-            };
+        document.addEventListener('DOMContentLoaded', () => {
 
-            // Use environment-provided config if available (in the dev environment), otherwise fall back to the user-provided one.
-            const firebaseConfig = typeof __firebase_config !== 'undefined'
-                ? JSON.parse(__firebase_config)
-                : userProvidedConfig;
-            
-            const appId = 'team-leave-planner-01';
+            // --- LOGIN UI ELEMENTS ---
+            const loginOverlay = document.getElementById('loginOverlay');
+            const appContainer = document.getElementById('app');
+            const loginForm = document.getElementById('loginForm');
+            const userIdInput = document.getElementById('userIdInput');
+            const validateBtn = document.getElementById('validateBtn');
+            const viewPlannerBtn = document.getElementById('viewPlannerBtn');
+            const loginMessage = document.getElementById('loginMessage');
 
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-            setLogLevel('debug');
+            // --- LOGIN LOGIC ---
+            loginForm.addEventListener('submit', (e) => e.preventDefault());
 
-            // --- STATE MANAGEMENT ---
-            let currentDate = new Date();
-            currentDate.setMonth(9); // October
-            currentDate.setFullYear(2025);
-            let currentMonth = currentDate.getMonth();
-            let currentYear = currentDate.getFullYear();
-            let editingLeave = null; 
-            let leaves = [];
-            let leavesCollectionPath;
-
-            // --- DOM ELEMENT REFERENCES ---
-            const form = document.getElementById('leaveForm');
-            const formTitle = document.getElementById('formTitle');
-            const nameInput = document.getElementById('employeeName');
-            const dateInput = document.getElementById('leaveDate');
-            const submitButton = document.getElementById('submitButton');
-            const cancelButton = document.getElementById('cancelButton');
-            const messageBox = document.getElementById('messageBox');
-            const calendarGrid = document.getElementById('calendarGrid');
-            const monthYearDisplay = document.getElementById('currentMonthYear');
-            const prevBtn = document.getElementById('prevMonth');
-            const nextBtn = document.getElementById('nextMonth');
-            const downloadPdfButton = document.getElementById('downloadPdfButton');
-            const tooltip = document.getElementById('tooltip');
-            const confirmationModal = document.getElementById('confirmationModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalMessage = document.getElementById('modalMessage');
-            const modalConfirmBtn = document.getElementById('modalConfirmBtn');
-            const modalCancelBtn = document.getElementById('modalCancelBtn');
-            const formLoadingOverlay = document.getElementById('formLoadingOverlay');
-            const calendarLoadingOverlay = document.getElementById('calendarLoadingOverlay');
-
-            // --- CORE FUNCTIONS (DEFINED BEFORE USE) ---
-            const seedInitialData = async () => {
-                const leavesCollection = collection(db, leavesCollectionPath);
-                const snapshot = await getDocs(leavesCollection);
-                if (snapshot.empty) {
-                    console.log("Database is empty. Seeding initial data...");
-                    const initialLeaves = [
-                        { employeeName: "Sujithra", leaveDate: "2025-10-20" },
-                        { employeeName: "Sujithra", leaveDate: "2025-10-23" },
-                        { employeeName: "Deepshika", leaveDate: "2025-10-15" },
-                        { employeeName: "Deepshika", leaveDate: "2025-10-20" },
-                        { employeeName: "Deepshika", leaveDate: "2025-10-22" },
-                        { employeeName: "Deepshika", leaveDate: "2025-10-28" },
-                        { employeeName: "Vivek", leaveDate: "2025-10-21" },
-                        { employeeName: "Vivek", leaveDate: "2025-10-22" },
-                        { employeeName: "Vivek", leaveDate: "2025-11-01" },
-                        { employeeName: "Vivek", leaveDate: "2025-11-02" },
-                        { employeeName: "Surjeet", leaveDate: "2025-10-21" },
-                        { employeeName: "Surjeet", leaveDate: "2025-10-22" },
-                        { employeeName: "Surjeet", leaveDate: "2025-10-23" },
-                        { employeeName: "Ravi", leaveDate: "2025-10-21" },
-                        { employeeName: "Akshay", leaveDate: "2025-10-21" },
-                        { employeeName: "Akshay", leaveDate: "2025-10-27" },
-                        { employeeName: "Harshita", leaveDate: "2025-10-16" },
-                        { employeeName: "Harshita", leaveDate: "2025-10-21" },
-                        { employeeName: "Harshita", leaveDate: "2025-10-27" },
-                        { employeeName: "Nilesh", leaveDate: "2025-10-21" },
-                        { employeeName: "Monika", leaveDate: "2025-10-22" },
-                        { employeeName: "Monika", leaveDate: "2025-10-23" },
-                        { employeeName: "Monika", leaveDate: "2025-10-25" },
-                    ];
-                    for (const leave of initialLeaves) {
-                        await addDoc(leavesCollection, leave);
-                    }
-                    console.log("Initial data seeded.");
+            const validateUserId = () => {
+                const userId = userIdInput.value.trim().toLowerCase();
+                if (userId.endsWith('@intuit.com')) {
+                    loginMessage.textContent = 'Validation successful. You can now view the planner.';
+                    loginMessage.classList.remove('text-red-600');
+                    loginMessage.classList.add('text-green-600');
+                    validateBtn.classList.add('hidden');
+                    viewPlannerBtn.classList.remove('hidden');
                 } else {
-                    console.log("Database already contains data. Skipping seed.");
-                }
-            };
-
-            const setupLeaveListener = () => {
-                const leavesCollection = collection(db, leavesCollectionPath);
-                onSnapshot(leavesCollection, (snapshot) => {
-                    leaves = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderCalendar();
-                    if (calendarLoadingOverlay) calendarLoadingOverlay.style.display = 'none';
-                }, (error) => {
-                    console.error("Error fetching leaves:", error);
-                    let errorMsg = 'Failed to sync with the database.';
-                    if (error.code === 'permission-denied') {
-                        errorMsg = 'Permission Denied. Please check your Firestore security rules in the Firebase Console.';
-                    }
-                    showMessage(errorMsg, 'error');
-                    if (calendarLoadingOverlay) calendarLoadingOverlay.innerHTML = `<p class="text-red-600 font-semibold text-center">${errorMsg}</p>`;
-                });
-            };
-
-            const renderCalendar = () => {
-                calendarGrid.innerHTML = ''; 
-                const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-                monthYearDisplay.textContent = `${new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })} ${currentYear}`;
-
-                for (let i = 0; i < firstDayOfMonth; i++) {
-                    calendarGrid.insertAdjacentHTML('beforeend', '<div class="day-cell"></div>');
-                }
-
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const date = new Date(currentYear, currentMonth, day);
-                    const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const leavesOnThisDay = leaves.filter(l => l.leaveDate === dateString);
-
-                    let dayClasses = 'calendar-day border border-gray-200 rounded-lg p-1.5 min-h-[80px] sm:min-h-[100px] text-xs sm:text-sm flex flex-col transition duration-200 ease-in-out';
-                    let dayNumberClasses = 'font-semibold mb-1';
-
-                    if (date < today) {
-                        dayClasses += ' bg-gray-100 text-gray-400 disabled';
-                    } else if (leavesOnThisDay.length >= 3) {
-                        dayClasses += ' bg-red-500 text-white';
-                    } else if (leavesOnThisDay.length === 2) {
-                        dayClasses += ' bg-red-200 text-red-900';
-                    } else if (leavesOnThisDay.length === 1) {
-                        dayClasses += ' bg-yellow-100 text-yellow-800';
-                    } else {
-                        dayClasses += ' bg-green-50 text-green-800 hover:bg-green-100';
-                    }
-                    
-                    if (date.getTime() === today.getTime()) {
-                         dayNumberClasses += ' bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center';
-                    } else {
-                         dayNumberClasses += ' text-gray-700';
-                    }
-
-                    let employeeListHTML = leavesOnThisDay.map(leave => `
-                        <div class="employee-entry group relative flex items-center justify-between text-xs font-medium bg-white/60 px-1.5 py-0.5 rounded-md mt-1 hover:bg-indigo-100" 
-                            data-id="${leave.id}" data-name="${leave.employeeName}" data-date="${leave.leaveDate}">
-                            <span class="truncate">${leave.employeeName}</span>
-                            <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition" data-id="${leave.id}">
-                                <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </div>`
-                    ).join('');
-
-                    const dayHTML = `<div class="${dayClasses}" data-date="${dateString}"><div class="${dayNumberClasses}">${day}</div>${employeeListHTML}</div>`;
-                    calendarGrid.insertAdjacentHTML('beforeend', dayHTML);
+                    loginMessage.textContent = 'Invalid User ID';
+                    loginMessage.classList.remove('text-green-600');
+                    loginMessage.classList.add('text-red-600');
+                    validateBtn.classList.remove('hidden');
+                    viewPlannerBtn.classList.add('hidden');
                 }
             };
             
-            const resetForm = () => {
-                form.reset();
-                editingLeave = null;
-                formTitle.textContent = 'Request Leave';
-                submitButton.textContent = 'Submit Request';
-                nameInput.disabled = false;
-                cancelButton.classList.add('hidden');
-            };
-            
-            const handleFormSubmit = async (event) => {
-                event.preventDefault();
-                const name = nameInput.value.trim();
-                const newDate = dateInput.value;
-
-                if (!name || !newDate) {
-                    showMessage('Please fill out both fields.', 'error'); return;
+            validateBtn.addEventListener('click', validateUserId);
+            // Allow pressing Enter to validate
+            userIdInput.addEventListener('keyup', (event) => {
+                if (event.key === 'Enter') {
+                    validateUserId();
                 }
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                if (new Date(newDate + 'T00:00:00') < today) {
-                    showMessage('Cannot book leave for a past date.', 'error'); return;
-                }
+            });
 
-                const addLeaveAction = async () => {
-                    try {
-                        await addDoc(collection(db, leavesCollectionPath), { employeeName: name, leaveDate: newDate });
-                        showMessage('Leave request submitted!', 'success');
-                        resetForm();
-                    } catch (error) {
-                        console.error("Error adding document: ", error);
-                        showMessage('Failed to submit leave.', 'error');
-                    }
-                };
-
-                const updateLeaveAction = async () => {
-                    try {
-                        const leaveDocRef = doc(db, leavesCollectionPath, editingLeave.id);
-                        await updateDoc(leaveDocRef, { leaveDate: newDate });
-                        showMessage('Leave updated!', 'success');
-                        resetForm();
-                    } catch (error) {
-                         console.error("Error updating document: ", error);
-                         showMessage('Failed to update leave.', 'error');
-                    }
-                };
-
-                if (editingLeave) {
-                    if (newDate === editingLeave.leaveDate) { resetForm(); return; }
-                    if (leaves.filter(l => l.leaveDate === newDate && l.id !== editingLeave.id).length >= 2) {
-                        showConfirmation('Capacity Warning', 'The new date is at capacity. Are you sure you want to move this leave?', updateLeaveAction);
-                    } else {
-                        await updateLeaveAction();
-                    }
-                } else {
-                    if (leaves.filter(l => l.leaveDate === newDate).length >= 2) {
-                        showConfirmation('Capacity Warning', 'This date is at capacity. Are you sure you want to add another person?', addLeaveAction);
-                    } else {
-                        await addLeaveAction();
-                    }
-                }
-            };
-
-            const handleCalendarClick = (event) => {
-                const deleteBtn = event.target.closest('.delete-btn');
-                const employeeEntry = event.target.closest('.employee-entry');
-
-                if (deleteBtn) {
-                    const docId = deleteBtn.dataset.id;
-                    const leaveToDelete = leaves.find(l => l.id === docId);
-                    if (leaveToDelete) {
-                        const deleteAction = async () => {
-                            try {
-                                await deleteDoc(doc(db, leavesCollectionPath, docId));
-                                showMessage('Leave entry deleted.', 'success');
-                                if (editingLeave && editingLeave.id === docId) resetForm();
-                            } catch (error) {
-                                console.error("Error deleting document: ", error);
-                                showMessage('Failed to delete leave.', 'error');
-                            }
-                        };
-                        showConfirmation(
-                            'Confirm Deletion', 
-                            `Are you sure you want to delete the leave for ${leaveToDelete.employeeName} on ${leaveToDelete.leaveDate}?`, 
-                            deleteAction
-                        );
-                    }
-                } else if (employeeEntry) {
-                    editingLeave = leaves.find(l => l.id === employeeEntry.dataset.id);
-                    if (editingLeave) {
-                        formTitle.textContent = 'Update Leave';
-                        submitButton.textContent = 'Update Request';
-                        nameInput.value = editingLeave.employeeName;
-                        nameInput.disabled = true;
-                        dateInput.value = editingLeave.leaveDate;
-                        cancelButton.classList.remove('hidden');
-                        nameInput.focus();
-                    }
-                }
-            };
-            
-            const handleCalendarMouseOver = (event) => {
-                const dayCell = event.target.closest('.calendar-day');
-                if (!dayCell) return;
-
-                const leavesOnDay = leaves.filter(l => l.leaveDate === dayCell.dataset.date);
-                if (leavesOnDay.length > 0) {
-                    const date = new Date(dayCell.dataset.date + 'T00:00:00');
-                    const formattedDate = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-                    tooltip.innerHTML = `<h4 class="font-bold text-base mb-1 border-b border-gray-600 pb-1">${formattedDate}</h4><ul class="list-disc list-inside">${leavesOnDay.map(l => `<li class="py-1">${l.employeeName}</li>`).join('')}</ul>`;
-                    tooltip.style.left = `${event.clientX + 15}px`;
-                    tooltip.style.top = `${event.clientY + 15}px`;
-                    tooltip.classList.add('visible');
-                }
-            };
-            
-            const handleCalendarMouseOut = () => tooltip.classList.remove('visible');
-            
-            const handlePdfDownload = () => {
-                const { jsPDF } = window.jspdf;
-                const today = new Date();
-                const startRange = new Date(today.getFullYear(), today.getMonth(), 1);
-                const endRange = new Date(today.getFullYear(), today.getMonth() + 2, 0);
-
-                const leavesToDownload = leaves.filter(leave => {
-                    const leaveDate = new Date(leave.leaveDate + 'T00:00:00');
-                    return leaveDate >= startRange && leaveDate <= endRange;
-                });
-
-                if (leavesToDownload.length === 0) {
-                    showMessage('No leaves for the current or next month to report.', 'error');
-                    return;
-                }
-
-                const groupedLeaves = leavesToDownload.reduce((acc, leave) => {
-                    if (!acc[leave.leaveDate]) {
-                        const date = new Date(leave.leaveDate + 'T00:00:00');
-                        acc[leave.leaveDate] = {
-                            day: date.toLocaleDateString('en-US', { weekday: 'long' }),
-                            names: []
-                        };
-                    }
-                    acc[leave.leaveDate].names.push(leave.employeeName);
-                    return acc;
-                }, {});
-
-                const sortedDates = Object.keys(groupedLeaves).sort();
-
-                const tableBody = sortedDates.map(date => {
-                    const { day, names } = groupedLeaves[date];
-                    return [date, day, names.join(', ')];
-                });
-
-                const doc = new jsPDF();
-                const currentMonthName = startRange.toLocaleString('default', { month: 'long' });
-                const nextMonthName = new Date(today.getFullYear(), today.getMonth() + 1, 1).toLocaleString('default', { month: 'long' });
-                const title = `Leave Report: ${currentMonthName} & ${nextMonthName} ${today.getFullYear()}`;
-                
-                doc.setFontSize(18);
-                doc.text(title, 14, 22);
-                doc.autoTable({
-                    head: [["Date", "Day", "Employees on Leave"]],
-                    body: tableBody,
-                    startY: 30,
-                    theme: 'striped',
-                    headStyles: { fillColor: [22, 160, 133], textColor: 255, fontStyle: 'bold' },
-                    alternateRowStyles: { fillColor: [240, 248, 255] },
-                    didDrawPage: (data) => {
-                        doc.setFontSize(10);
-                        doc.text('Page ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
-                    }
-                });
-                doc.save(`leave_report_${currentMonthName}_${nextMonthName}.pdf`);
-            };
-
-            const showMessage = (message, type) => {
-                messageBox.innerHTML = '';
-                const color = type === 'success' ? 'text-green-600' : 'text-red-600';
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `${color} p-2 rounded-md bg-opacity-20 message-enter`;
-                messageDiv.textContent = message;
-                messageBox.appendChild(messageDiv);
-                requestAnimationFrame(() => messageDiv.classList.add('message-enter-active'));
+            viewPlannerBtn.addEventListener('click', () => {
+                loginOverlay.classList.add('opacity-0');
                 setTimeout(() => {
-                    messageDiv.style.opacity = '0';
-                    messageDiv.style.transform = 'translateY(-10px)';
-                    setTimeout(() => messageBox.innerHTML = '', 300);
-                }, 4000);
-            };
-            
-            let confirmCallback = null;
-            const showConfirmation = (title, message, onConfirm) => {
-                modalTitle.textContent = title;
-                modalMessage.textContent = message;
-                confirmationModal.classList.remove('hidden');
-                confirmCallback = onConfirm;
-            };
-            const hideConfirmation = () => {
-                confirmationModal.classList.add('hidden');
-                confirmCallback = null;
-            };
+                    loginOverlay.classList.add('hidden');
+                }, 300);
+                appContainer.classList.remove('hidden');
+                
+                // Initialize the main app logic ONLY after validation
+                initializeAppLogic();
+            });
 
-            // --- AUTHENTICATION & INITIALIZATION ---
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
+
+            // --- MAIN APP LOGIC ---
+            async function initializeAppLogic() {
+                // --- FIREBASE SETUP ---
+                const userProvidedConfig = {
+                    apiKey: "AIzaSyC3W-5IUN-htJtWY0-g1CMtniM0x5vj6W0",
+                    authDomain: "team-leave-planner-1e2d5.firebaseapp.com",
+                    projectId: "team-leave-planner-1e2d5",
+                    storageBucket: "team-leave-planner-1e2d5.appspot.com",
+                    messagingSenderId: "644468744907",
+                    appId: "1:644468744907:web:65d26f5d7dcf3cf8b6f14e",
+                    measurementId: "G-BL9569JE6E"
+                };
+
+                const firebaseConfig = typeof __firebase_config !== 'undefined'
+                    ? JSON.parse(__firebase_config)
+                    : userProvidedConfig;
+                
+                const appId = 'team-leave-planner-01';
+
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+                setLogLevel('debug');
+
+                // --- STATE MANAGEMENT ---
+                let currentDate = new Date();
+                currentDate.setMonth(9); // October
+                currentDate.setFullYear(2025);
+                let currentMonth = currentDate.getMonth();
+                let currentYear = currentDate.getFullYear();
+                let editingLeave = null; 
+                let leaves = [];
+                let leavesCollectionPath;
+
+                // --- DOM ELEMENT REFERENCES ---
+                const form = document.getElementById('leaveForm');
+                const formTitle = document.getElementById('formTitle');
+                const nameInput = document.getElementById('employeeName');
+                const dateInput = document.getElementById('leaveDate');
+                const submitButton = document.getElementById('submitButton');
+                const cancelButton = document.getElementById('cancelButton');
+                const messageBox = document.getElementById('messageBox');
+                const calendarGrid = document.getElementById('calendarGrid');
+                const monthYearDisplay = document.getElementById('currentMonthYear');
+                const prevBtn = document.getElementById('prevMonth');
+                const nextBtn = document.getElementById('nextMonth');
+                const downloadPdfButton = document.getElementById('downloadPdfButton');
+                const tooltip = document.getElementById('tooltip');
+                const confirmationModal = document.getElementById('confirmationModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalMessage = document.getElementById('modalMessage');
+                const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+                const modalCancelBtn = document.getElementById('modalCancelBtn');
+                const formLoadingOverlay = document.getElementById('formLoadingOverlay');
+                const calendarLoadingOverlay = document.getElementById('calendarLoadingOverlay');
+                const leaveSummaryContainer = document.getElementById('leaveSummary');
+
+                // --- CORE FUNCTIONS (DEFINED BEFORE USE) ---
+                const seedInitialData = async () => {
+                    const leavesCollection = collection(db, leavesCollectionPath);
                     try {
-                        console.log("User authenticated with UID:", user.uid);
-                        leavesCollectionPath = `artifacts/${appId}/public/data/leaves`;
-                        await seedInitialData();
-                        setupLeaveListener();
-                        if (formLoadingOverlay) formLoadingOverlay.style.display = 'none';
+                        const snapshot = await getDocs(leavesCollection);
+                        if (snapshot.empty) {
+                            console.log("Database is empty. Seeding initial data...");
+                            const initialLeaves = [
+                                { employeeName: "Sujithra", leaveDate: "2025-10-20" }, { employeeName: "Sujithra", leaveDate: "2025-10-23" },
+                                { employeeName: "Deepshika", leaveDate: "2025-10-15" }, { employeeName: "Deepshika", leaveDate: "2025-10-20" }, { employeeName: "Deepshika", leaveDate: "2025-10-22" }, { employeeName: "Deepshika", leaveDate: "2025-10-28" },
+                                { employeeName: "Vivek", leaveDate: "2025-10-21" }, { employeeName: "Vivek", leaveDate: "2025-10-22" }, { employeeName: "Vivek", leaveDate: "2025-11-01" }, { employeeName: "Vivek", leaveDate: "2025-11-02" },
+                                { employeeName: "Surjeet", leaveDate: "2025-10-21" }, { employeeName: "Surjeet", leaveDate: "2025-10-22" }, { employeeName: "Surjeet", leaveDate: "2025-10-23" },
+                                { employeeName: "Ravi", leaveDate: "2025-10-21" },
+                                { employeeName: "Akshay", leaveDate: "2025-10-21" }, { employeeName: "Akshay", leaveDate: "2025-10-27" },
+                                { employeeName: "Harshita", leaveDate: "2025-10-16" }, { employeeName: "Harshita", leaveDate: "2025-10-21" }, { employeeName: "Harshita", leaveDate: "2025-10-27" },
+                                { employeeName: "Nilesh", leaveDate: "2025-10-21" },
+                                { employeeName: "Monika", leaveDate: "2025-10-22" }, { employeeName: "Monika", leaveDate: "2025-10-23" }, { employeeName: "Monika", leaveDate: "2025-10-25" },
+                            ];
+                            for (const leave of initialLeaves) {
+                                await addDoc(leavesCollection, leave);
+                            }
+                            console.log("Initial data seeded.");
+                        } else {
+                            console.log("Database already contains data. Skipping seed.");
+                        }
                     } catch (error) {
-                        console.error("Firestore initialization failed:", error);
-                        let errorMsg = 'Failed to load data.';
+                        console.error("Error checking or seeding data:", error);
+                        throw error;
+                    }
+                };
+
+                const renderLeaveSummary = () => {
+                    const employeeOptions = [...document.querySelectorAll('#employee-names option')];
+                    const leaveCounts = {};
+
+                    employeeOptions.forEach(opt => {
+                        leaveCounts[opt.value] = 0;
+                    });
+
+                    leaves.forEach(leave => {
+                        const canonicalName = employeeOptions.find(opt => opt.value.toLowerCase() === leave.employeeName.toLowerCase())?.value;
+                        if (canonicalName && leaveCounts.hasOwnProperty(canonicalName)) {
+                            leaveCounts[canonicalName]++;
+                        }
+                    });
+
+                    const sortedNames = Object.keys(leaveCounts).sort();
+
+                    if (sortedNames.length === 0) {
+                        leaveSummaryContainer.innerHTML = '<p class="text-gray-500">No employees found.</p>';
+                        return;
+                    }
+
+                    leaveSummaryContainer.innerHTML = sortedNames.map(name => `
+                        <div class="flex justify-between items-center text-sm py-1.5 border-b border-gray-100 last:border-b-0">
+                            <span class="text-gray-700 font-medium">${name}</span>
+                            <span class="font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full text-xs">${leaveCounts[name]}</span>
+                        </div>
+                    `).join('');
+                };
+
+                const setupLeaveListener = () => {
+                    const leavesCollection = collection(db, leavesCollectionPath);
+                    onSnapshot(leavesCollection, (snapshot) => {
+                        leaves = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        renderCalendar();
+                        renderLeaveSummary();
+                        if (calendarLoadingOverlay) calendarLoadingOverlay.style.display = 'none';
+                    }, (error) => {
+                        console.error("Error fetching leaves:", error);
+                        let errorMsg = 'Failed to sync with the database.';
                         if (error.code === 'permission-denied') {
                             errorMsg = 'Permission Denied. Please check your Firestore security rules in the Firebase Console.';
                         }
                         showMessage(errorMsg, 'error');
-                        if (formLoadingOverlay) formLoadingOverlay.innerHTML = `<p class="text-red-600 font-semibold">${errorMsg}</p>`;
                         if (calendarLoadingOverlay) calendarLoadingOverlay.innerHTML = `<p class="text-red-600 font-semibold text-center">${errorMsg}</p>`;
-                    }
-                } else {
-                    console.log("User not authenticated.");
-                    if(formLoadingOverlay) formLoadingOverlay.innerHTML = '<p class="text-red-600 font-semibold">Connection Failed</p>';
-                    if(calendarLoadingOverlay) calendarLoadingOverlay.innerHTML = '<p class="text-red-600 font-semibold">Connection Failed</p>';
-                }
-            });
-            
-            try {
-                // Use custom token ONLY if the environment provides it AND the environment-specific config is being used.
-                // Otherwise, always sign in anonymously.
-                if (typeof __firebase_config !== 'undefined' && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                 console.error("Authentication failed:", error);
-                 showMessage('Could not connect to the database. Check your Firebase config and security rules.', 'error');
-            }
-            
-            // --- EVENT LISTENERS ---
-            form.addEventListener('submit', handleFormSubmit);
-            calendarGrid.addEventListener('click', handleCalendarClick);
-            calendarGrid.addEventListener('mousemove', handleCalendarMouseOver);
-            calendarGrid.addEventListener('mouseout', handleCalendarMouseOut);
-            cancelButton.addEventListener('click', resetForm);
-            downloadPdfButton.addEventListener('click', handlePdfDownload);
-            modalConfirmBtn.addEventListener('click', () => {
-                if (confirmCallback) confirmCallback();
-                hideConfirmation();
-            });
-            modalCancelBtn.addEventListener('click', hideConfirmation);
-            prevBtn.addEventListener('click', () => {
-                currentMonth--;
-                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-                renderCalendar();
-            });
-            nextBtn.addEventListener('click', () => {
-                currentMonth++;
-                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-                renderCalendar();
-            });
+                    });
+                };
 
-            // --- INITIALIZATION ---
-            dateInput.setAttribute('min', new Date().toISOString().split('T')[0]);
+                const renderCalendar = () => {
+                    calendarGrid.innerHTML = ''; 
+                    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+                    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+                    monthYearDisplay.textContent = `${new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })} ${currentYear}`;
+
+                    for (let i = 0; i < firstDayOfMonth; i++) {
+                        calendarGrid.insertAdjacentHTML('beforeend', '<div class="day-cell"></div>');
+                    }
+
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        const date = new Date(currentYear, currentMonth, day);
+                        const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const leavesOnThisDay = leaves.filter(l => l.leaveDate === dateString);
+
+                        let dayClasses = 'calendar-day border border-gray-200 rounded-lg p-1.5 min-h-[80px] sm:min-h-[100px] text-xs sm:text-sm flex flex-col transition duration-200 ease-in-out';
+                        let dayNumberClasses = 'font-semibold mb-1';
+
+                        if (date < today) {
+                            dayClasses += ' bg-gray-100 text-gray-400 disabled';
+                        } else if (leavesOnThisDay.length >= 3) {
+                            dayClasses += ' bg-red-500 text-white';
+                        } else if (leavesOnThisDay.length === 2) {
+                            dayClasses += ' bg-red-200 text-red-900';
+                        } else if (leavesOnThisDay.length === 1) {
+                            dayClasses += ' bg-yellow-100 text-yellow-800';
+                        } else {
+                            dayClasses += ' bg-green-50 text-green-800 hover:bg-green-100';
+                        }
+                        
+                        if (date.getTime() === today.getTime()) {
+                            dayNumberClasses += ' bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center';
+                        } else {
+                            dayNumberClasses += ' text-gray-700';
+                        }
+
+                        let employeeListHTML = leavesOnThisDay.map(leave => `
+                            <div class="employee-entry group relative flex items-center justify-between text-xs font-medium bg-white/60 px-1.5 py-0.5 rounded-md mt-1 hover:bg-indigo-100" 
+                                data-id="${leave.id}" data-name="${leave.employeeName}" data-date="${leave.leaveDate}">
+                                <span class="truncate">${leave.employeeName}</span>
+                                <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition" data-id="${leave.id}">
+                                    <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>`
+                        ).join('');
+
+                        const dayHTML = `<div class="${dayClasses}" data-date="${dateString}"><div class="${dayNumberClasses}">${day}</div>${employeeListHTML}</div>`;
+                        calendarGrid.insertAdjacentHTML('beforeend', dayHTML);
+                    }
+                };
+                
+                const resetForm = () => {
+                    form.reset();
+                    editingLeave = null;
+                    formTitle.textContent = 'Request Leave';
+                    submitButton.textContent = 'Submit Request';
+                    nameInput.disabled = false;
+                    cancelButton.classList.add('hidden');
+                };
+                
+                const handleFormSubmit = async (event) => {
+                    event.preventDefault();
+                    let name = nameInput.value.trim();
+                    const newDate = dateInput.value;
+
+                    if (!name || !newDate) {
+                        showMessage('Please fill out both fields.', 'error'); return;
+                    }
+
+                    const employeeOptions = [...document.querySelectorAll('#employee-names option')];
+                    const canonicalName = employeeOptions.find(opt => opt.value.toLowerCase() === name.toLowerCase())?.value;
+
+                    if (!canonicalName) {
+                        showMessage(`Employee "${name}" is not in the recognized list.`, 'error');
+                        return;
+                    }
+                    name = canonicalName;
+
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    if (new Date(newDate + 'T00:00:00') < today) {
+                        showMessage('Cannot book leave for a past date.', 'error'); return;
+                    }
+
+                    const addLeaveAction = async () => {
+                        try {
+                            await addDoc(collection(db, leavesCollectionPath), { employeeName: name, leaveDate: newDate });
+                            showMessage('Leave request submitted!', 'success');
+                            resetForm();
+                        } catch (error) {
+                            console.error("Error adding document: ", error);
+                            showMessage('Failed to submit leave.', 'error');
+                        }
+                    };
+
+                    const updateLeaveAction = async () => {
+                        try {
+                            const leaveDocRef = doc(db, leavesCollectionPath, editingLeave.id);
+                            await updateDoc(leaveDocRef, { leaveDate: newDate });
+                            showMessage('Leave updated!', 'success');
+                            resetForm();
+                        } catch (error) {
+                            console.error("Error updating document: ", error);
+                            showMessage('Failed to update leave.', 'error');
+                        }
+                    };
+
+                    if (editingLeave) {
+                        if (newDate === editingLeave.leaveDate) { resetForm(); return; }
+                        if (leaves.filter(l => l.leaveDate === newDate && l.id !== editingLeave.id).length >= 2) {
+                            showConfirmation('Capacity Warning', 'The new date is at capacity. Are you sure you want to move this leave?', updateLeaveAction);
+                        } else {
+                            await updateLeaveAction();
+                        }
+                    } else {
+                        if (leaves.filter(l => l.leaveDate === newDate).length >= 2) {
+                            showConfirmation('Capacity Warning', 'This date is at capacity. Are you sure you want to add another person?', addLeaveAction);
+                        } else {
+                            await addLeaveAction();
+                        }
+                    }
+                };
+
+                const handleCalendarClick = (event) => {
+                    const deleteBtn = event.target.closest('.delete-btn');
+                    const employeeEntry = event.target.closest('.employee-entry');
+
+                    if (deleteBtn) {
+                        const docId = deleteBtn.dataset.id;
+                        const leaveToDelete = leaves.find(l => l.id === docId);
+                        if (leaveToDelete) {
+                            const deleteAction = async () => {
+                                try {
+                                    await deleteDoc(doc(db, leavesCollectionPath, docId));
+                                    showMessage('Leave entry deleted.', 'success');
+                                    if (editingLeave && editingLeave.id === docId) resetForm();
+                                } catch (error) {
+                                    console.error("Error deleting document: ", error);
+                                    showMessage('Failed to delete leave.', 'error');
+                                }
+                            };
+                            showConfirmation(
+                                'Confirm Deletion', 
+                                `Are you sure you want to delete the leave for ${leaveToDelete.employeeName} on ${leaveToDelete.leaveDate}?`, 
+                                deleteAction
+                            );
+                        }
+                    } else if (employeeEntry) {
+                        editingLeave = leaves.find(l => l.id === employeeEntry.dataset.id);
+                        if (editingLeave) {
+                            formTitle.textContent = 'Update Leave';
+                            submitButton.textContent = 'Update Request';
+                            nameInput.value = editingLeave.employeeName;
+                            nameInput.disabled = true;
+                            dateInput.value = editingLeave.leaveDate;
+                            cancelButton.classList.remove('hidden');
+                            nameInput.focus();
+                        }
+                    }
+                };
+                
+                const handleCalendarMouseOver = (event) => {
+                    const dayCell = event.target.closest('.calendar-day');
+                    if (!dayCell) return;
+
+                    const leavesOnDay = leaves.filter(l => l.leaveDate === dayCell.dataset.date);
+                    if (leavesOnDay.length > 0) {
+                        const date = new Date(dayCell.dataset.date + 'T00:00:00');
+                        const formattedDate = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                        tooltip.innerHTML = `<h4 class="font-bold text-base mb-1 border-b border-gray-600 pb-1">${formattedDate}</h4><ul class="list-disc list-inside">${leavesOnDay.map(l => `<li class="py-1">${l.employeeName}</li>`).join('')}</ul>`;
+                        tooltip.style.left = `${event.clientX + 15}px`;
+                        tooltip.style.top = `${event.clientY + 15}px`;
+                        tooltip.classList.add('visible');
+                    }
+                };
+                
+                const handleCalendarMouseOut = () => tooltip.classList.remove('visible');
+                
+                const handlePdfDownload = () => {
+                    const { jsPDF } = window.jspdf;
+                    const today = new Date();
+                    const startRange = new Date(today.getFullYear(), today.getMonth(), 1);
+                    const endRange = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+
+                    const leavesToDownload = leaves.filter(leave => {
+                        const leaveDate = new Date(leave.leaveDate + 'T00:00:00');
+                        return leaveDate >= startRange && leaveDate <= endRange;
+                    });
+
+                    if (leavesToDownload.length === 0) {
+                        showMessage('No leaves for the current or next month to report.', 'error');
+                        return;
+                    }
+
+                    const groupedLeaves = leavesToDownload.reduce((acc, leave) => {
+                        if (!acc[leave.leaveDate]) {
+                            const date = new Date(leave.leaveDate + 'T00:00:00');
+                            acc[leave.leaveDate] = {
+                                day: date.toLocaleDateString('en-US', { weekday: 'long' }),
+                                names: []
+                            };
+                        }
+                        acc[leave.leaveDate].names.push(leave.employeeName);
+                        return acc;
+                    }, {});
+
+                    const sortedDates = Object.keys(groupedLeaves).sort();
+
+                    const tableBody = sortedDates.map(date => {
+                        const { day, names } = groupedLeaves[date];
+                        return [date, day, names.join(', ')];
+                    });
+
+                    const doc = new jsPDF();
+                    const currentMonthName = startRange.toLocaleString('default', { month: 'long' });
+                    const nextMonthName = new Date(today.getFullYear(), today.getMonth() + 1, 1).toLocaleString('default', { month: 'long' });
+                    const title = `Leave Report: ${currentMonthName} & ${nextMonthName} ${today.getFullYear()}`;
+                    
+                    doc.setFontSize(18);
+                    doc.text(title, 14, 22);
+                    doc.autoTable({
+                        head: [["Date", "Day", "Employees on Leave"]],
+                        body: tableBody,
+                        startY: 30,
+                        theme: 'striped',
+                        headStyles: { fillColor: [22, 160, 133], textColor: 255, fontStyle: 'bold' },
+                        alternateRowStyles: { fillColor: [240, 248, 255] },
+                        didDrawPage: (data) => {
+                            doc.setFontSize(10);
+                            doc.text('Page ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
+                        }
+                    });
+                    doc.save(`leave_report_${currentMonthName}_${nextMonthName}.pdf`);
+                };
+
+                const showMessage = (message, type) => {
+                    messageBox.innerHTML = '';
+                    const color = type === 'success' ? 'text-green-600' : 'text-red-600';
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `${color} p-2 rounded-md bg-opacity-20 message-enter`;
+                    messageDiv.textContent = message;
+                    messageBox.appendChild(messageDiv);
+                    requestAnimationFrame(() => messageDiv.classList.add('message-enter-active'));
+                    setTimeout(() => {
+                        messageDiv.style.opacity = '0';
+                        messageDiv.style.transform = 'translateY(-10px)';
+                        setTimeout(() => messageBox.innerHTML = '', 300);
+                    }, 4000);
+                };
+                
+                let confirmCallback = null;
+                const showConfirmation = (title, message, onConfirm) => {
+                    modalTitle.textContent = title;
+                    modalMessage.textContent = message;
+                    confirmationModal.classList.remove('hidden');
+                    confirmCallback = onConfirm;
+                };
+                const hideConfirmation = () => {
+                    confirmationModal.classList.add('hidden');
+                    confirmCallback = null;
+                };
+
+                // --- AUTHENTICATION & INITIALIZATION ---
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        try {
+                            console.log("User authenticated with UID:", user.uid);
+                            leavesCollectionPath = `artifacts/${appId}/public/data/leaves`;
+                            await seedInitialData();
+                            setupLeaveListener();
+                            if (formLoadingOverlay) formLoadingOverlay.style.display = 'none';
+                        } catch (error) {
+                            console.error("Firestore initialization failed:", error);
+                            let errorMsg = 'Failed to load data.';
+                            if (error.code === 'permission-denied') {
+                                errorMsg = 'Permission Denied. Please check your Firestore security rules in the Firebase Console.';
+                            }
+                            showMessage(errorMsg, 'error');
+                            if (formLoadingOverlay) formLoadingOverlay.innerHTML = `<p class="text-red-600 font-semibold">${errorMsg}</p>`;
+                            if (calendarLoadingOverlay) calendarLoadingOverlay.innerHTML = `<p class="text-red-600 font-semibold text-center">${errorMsg}</p>`;
+                        }
+                    } else {
+                        console.log("User not authenticated.");
+                        if(formLoadingOverlay) formLoadingOverlay.innerHTML = '<p class="text-red-600 font-semibold">Connection Failed</p>';
+                        if(calendarLoadingOverlay) calendarLoadingOverlay.innerHTML = '<p class="text-red-600 font-semibold">Connection Failed</p>';
+                    }
+                });
+                
+                try {
+                    if (typeof __firebase_config !== 'undefined' && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Authentication failed:", error);
+                    showMessage('Could not connect to the database. Check your Firebase config and security rules.', 'error');
+                }
+                
+                // --- EVENT LISTENERS ---
+                form.addEventListener('submit', handleFormSubmit);
+                calendarGrid.addEventListener('click', handleCalendarClick);
+                calendarGrid.addEventListener('mousemove', handleCalendarMouseOver);
+                calendarGrid.addEventListener('mouseout', handleCalendarMouseOut);
+                cancelButton.addEventListener('click', resetForm);
+                downloadPdfButton.addEventListener('click', handlePdfDownload);
+                modalConfirmBtn.addEventListener('click', () => {
+                    if (confirmCallback) confirmCallback();
+                    hideConfirmation();
+                });
+                modalCancelBtn.addEventListener('click', hideConfirmation);
+                prevBtn.addEventListener('click', () => {
+                    currentMonth--;
+                    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                    renderCalendar();
+                });
+                nextBtn.addEventListener('click', () => {
+                    currentMonth++;
+                    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                    renderCalendar();
+                });
+
+                // --- INITIALIZATION ---
+                dateInput.setAttribute('min', new Date().toISOString().split('T')[0]);
+            }
         });
     </script>
 </body>
