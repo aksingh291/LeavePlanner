@@ -12,10 +12,11 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
         }
         .calendar-day:not(.disabled):hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
         .message-enter {
             opacity: 0;
@@ -40,40 +41,70 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="text-gray-800">
 
     <!-- Login Overlay -->
-    <div id="loginOverlay" class="fixed inset-0 bg-gray-100 z-50 flex items-center justify-center p-4 transition-opacity duration-300">
-        <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border border-gray-200">
-            <div class="text-center">
-                <h1 class="text-2xl font-bold text-gray-900">Marketplace India Team Leave Planner</h1>
-                <p class="mt-2 text-sm text-gray-500">Please validate your User ID to continue.</p>
+    <div id="loginOverlay" class="fixed inset-0 bg-white z-50 flex flex-col lg:flex-row transition-opacity duration-300">
+        <!-- Decorative Left Side -->
+        <div class="relative w-full h-64 lg:h-full lg:w-1/2 flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 text-white p-8 lg:p-12">
+            <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.4%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+            <div class="relative z-10 text-center">
+                <div class="mx-auto h-16 w-16 mb-4 text-sky-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                    </svg>
+                </div>
+                <h2 class="text-3xl font-bold">Welcome Back</h2>
+                <p class="mt-2 max-w-sm mx-auto opacity-80">Your team's schedule, organized and accessible. Sign in to manage and view time off.</p>
             </div>
-            <form id="loginForm" class="mt-8 space-y-6">
-                <div>
-                    <label for="userIdInput" class="block text-sm font-medium text-gray-700">User ID</label>
-                    <div class="mt-1">
-                        <input id="userIdInput" placeholder="work-email-id" name="userid" type="text" autocomplete="off" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+
+        <!-- Form Right Side -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 p-8 sm:p-12">
+            <div class="w-full max-w-md">
+                <div class="text-center lg:text-left mb-10">
+                    <h1 class="text-3xl font-bold text-gray-900">Marketplace India Team Leave Planner</h1>
+                    <p class="mt-2 text-sm text-gray-500">Please validate your User ID to continue.</p>
+                </div>
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="userIdInput" class="block text-sm font-medium text-gray-700">User ID</label>
+                        <div class="mt-1 relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                </svg>
+                            </span>
+                            <input id="userIdInput" placeholder="work_email" name="userid" type="text" autocomplete="off" required class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <button type="button" id="validateBtn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Validate
-                    </button>
-                    <button type="button" id="viewPlannerBtn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hidden">
-                        View Planner
-                    </button>
-                </div>
-                <p id="loginMessage" class="text-center text-sm font-medium"></p>
-            </form>
+                    <div>
+                        <button type="button" id="validateBtn" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-800 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-transform transform hover:scale-105">
+                            Validate
+                        </button>
+                        <button type="button" id="viewPlannerBtn" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hidden transition-transform transform hover:scale-105">
+                            View Planner
+                        </button>
+                    </div>
+                    <p id="loginMessage" class="text-center text-sm font-medium"></p>
+                </form>
+            </div>
         </div>
     </div>
 
     <div id="app" class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl hidden">
         <!-- Header Section -->
-        <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">MarketPlace India Team Leave Planner</h1>
-            <p class="mt-2 text-md text-gray-600">Plan your team's time off.</p>
+        <header class="text-center mb-10 flex items-center justify-center gap-4">
+            <div class="h-12 w-12 text-blue-600">
+               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                 <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+               </svg>
+            </div>
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800">MarketPlace India Team Leave Planner</h1>
+                <p class="mt-1 text-md text-gray-500">Plan your team's time off.</p>
+            </div>
         </header>
 
         <!-- Main Content Grid -->
@@ -81,7 +112,7 @@
             <!-- Left Column Container -->
             <div class="lg:col-span-1 space-y-8">
                 <!-- Leave Request Form -->
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-fit relative">
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 h-fit relative">
                     <div id="formLoadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
                         <p class="text-gray-600 font-semibold animate-pulse">Connecting...</p>
                     </div>
@@ -89,26 +120,26 @@
                     <form id="leaveForm" class="space-y-4">
                         <div>
                             <label for="employeeName" class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
-                            <input type="text" id="employeeName" placeholder="Enter full name" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition disabled:bg-gray-100">
+                            <input type="text" id="employeeName" placeholder="Enter full name" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition disabled:bg-gray-100">
                         </div>
                         <div>
                             <label for="leaveDate" class="block text-sm font-medium text-gray-700 mb-1">Leave Date</label>
-                            <input type="date" id="leaveDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                            <input type="date" id="leaveDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                         </div>
                         <div>
                             <label for="leaveType" class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
-                            <select id="leaveType" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                            <select id="leaveType" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                                 <option value="P">P - Planned</option>
                                 <option value="S">S - Sick</option>
                                 <option value="H">H - Holiday</option>
                                 <option value="C">C - Casual</option>
                             </select>
                         </div>
-                        <div class="flex space-x-2">
-                            <button type="submit" id="submitButton" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
+                        <div class="flex space-x-2 pt-2">
+                            <button type="submit" id="submitButton" class="w-full bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-md hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-transform transform hover:scale-105">
                                 Submit Request
                             </button>
-                            <button type="button" id="cancelButton" class="w-full bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition hidden">
+                            <button type="button" id="cancelButton" class="w-full bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition hidden">
                                 Cancel
                             </button>
                         </div>
@@ -118,16 +149,16 @@
                 </div>
 
                 <!-- Leave Summary -->
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-fit">
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 h-fit">
                     <h2 class="text-xl font-semibold mb-4 text-gray-800">Leave Summary</h2>
-                    <div id="leaveSummary" class="space-y-2 max-h-60 overflow-y-auto">
+                    <div id="leaveSummary" class="space-y-2 max-h-60 overflow-y-auto pr-2">
                         <p class="text-gray-500 animate-pulse">Loading summary...</p>
                     </div>
                 </div>
             </div>
 
             <!-- Right Column: Calendar View -->
-            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg border border-gray-200 relative">
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md border border-gray-100 relative">
                  <div id="calendarLoadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
                     <p class="text-gray-600 font-semibold animate-pulse">Loading Calendar...</p>
                 </div>
@@ -142,8 +173,8 @@
                         </button>
                     </div>
                     <div>
-                        <button id="downloadPdfButton" class="flex items-center space-x-2 bg-red-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-transform transform hover:scale-105">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zm5 2v4h2V5h-2zm-2 6v2h6v-2H7z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
+                        <button id="downloadPdfButton" class="flex items-center space-x-2 bg-slate-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-transform transform hover:scale-105">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M.022 0h19.956v20H.022V0zm8.978 14.823V5.5h2v9.323l3.3-3.3.707.707-4.5 4.5-4.5-4.5.707-.707 3.3 3.3z"/></svg>
                             <span class="hidden sm:inline">Download Report</span>
                         </button>
                     </div>
@@ -170,7 +201,7 @@
                     <p id="modalMessage" class="text-sm text-gray-500"></p>
                 </div>
                 <div class="items-center px-4 py-3 space-x-2">
-                    <button id="modalConfirmBtn" class="px-4 py-2 bg-indigo-500 text-white text-base font-medium rounded-md w-auto hover:bg-indigo-600">Yes, Proceed</button>
+                    <button id="modalConfirmBtn" class="px-4 py-2 bg-slate-800 text-white text-base font-medium rounded-md w-auto hover:bg-slate-900">Yes, Proceed</button>
                     <button id="modalCancelBtn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto hover:bg-gray-300">Cancel</button>
                 </div>
             </div>
@@ -351,7 +382,7 @@
                             <div class="flex items-center space-x-4">
                                 <div class="text-right">
                                     <span class="text-xs text-gray-500">Leaves</span>
-                                    <span class="font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full text-xs">${leaveCounts[name].leaves}</span>
+                                    <span class="font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full text-xs">${leaveCounts[name].leaves}</span>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-xs text-gray-500">Holidays</span>
@@ -401,26 +432,26 @@
                         let dayNumberClasses = 'font-semibold mb-1 text-gray-700';
 
                         if (leavesOnThisDay.length >= 3) {
-                            dayClasses += ' bg-red-500 text-white';
+                            dayClasses += ' bg-rose-400 text-white';
                         } else if (leavesOnThisDay.length === 2) {
-                            dayClasses += ' bg-red-200 text-red-900';
+                            dayClasses += ' bg-amber-200 text-amber-900';
                         } else if (leavesOnThisDay.length === 1) {
-                            dayClasses += ' bg-yellow-100 text-yellow-800';
+                            dayClasses += ' bg-sky-100 text-sky-800';
                         } else {
-                            dayClasses += ' bg-green-50 text-green-800 hover:bg-green-100';
+                            dayClasses += ' bg-white hover:bg-gray-50';
                         }
                         
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
                         if (date.getTime() === today.getTime()) {
-                            dayNumberClasses = 'font-bold bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center mb-1';
+                            dayNumberClasses = 'font-bold bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center mb-1';
                         }
 
                         let employeeListHTML = leavesOnThisDay.map(leave => `
-                            <div class="employee-entry group relative flex items-center justify-between text-xs font-medium bg-white/60 px-1.5 py-0.5 rounded-md mt-1 hover:bg-indigo-100" 
+                            <div class="employee-entry group relative flex items-center justify-between text-xs font-medium bg-white/70 px-1.5 py-0.5 rounded-md mt-1 hover:bg-gray-100" 
                                 data-id="${leave.id}" data-name="${leave.employeeName}" data-date="${leave.leaveDate}" data-type="${leave.leaveType}">
                                 <span class="truncate">${leave.employeeName}</span>
-                                <span class="ml-1 font-bold text-indigo-700 bg-indigo-100 rounded-full px-1.5 text-[10px]">${leave.leaveType}</span>
+                                <span class="ml-1 font-bold text-slate-700 bg-slate-200 rounded-full px-1.5 text-[10px]">${leave.leaveType}</span>
                                 <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition" data-id="${leave.id}">
                                     <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                 </button>
@@ -596,8 +627,8 @@
                         body: tableBody,
                         startY: 30,
                         theme: 'striped',
-                        headStyles: { fillColor: [22, 160, 133], textColor: 255, fontStyle: 'bold' },
-                        alternateRowStyles: { fillColor: [240, 248, 255] },
+                        headStyles: { fillColor: [30, 41, 59] }, // Slate 800
+                        alternateRowStyles: { fillColor: [241, 245, 249] }, // Slate 100
                         didDrawPage: (data) => {
                             doc.setFontSize(10);
                             doc.text('Page ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
