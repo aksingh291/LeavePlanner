@@ -95,6 +95,15 @@
                             <label for="leaveDate" class="block text-sm font-medium text-gray-700 mb-1">Leave Date</label>
                             <input type="date" id="leaveDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                         </div>
+                        <div>
+                            <label for="leaveType" class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
+                            <select id="leaveType" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                <option value="P">P - Planned</option>
+                                <option value="S">S - Sick</option>
+                                <option value="H">H - Holiday</option>
+                                <option value="C">C - Casual</option>
+                            </select>
+                        </div>
                         <div class="flex space-x-2">
                             <button type="submit" id="submitButton" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
                                 Submit Request
@@ -264,6 +273,7 @@
                 const formTitle = document.getElementById('formTitle');
                 const nameInput = document.getElementById('employeeName');
                 const dateInput = document.getElementById('leaveDate');
+                const leaveTypeInput = document.getElementById('leaveType');
                 const submitButton = document.getElementById('submitButton');
                 const cancelButton = document.getElementById('cancelButton');
                 const messageBox = document.getElementById('messageBox');
@@ -290,15 +300,15 @@
                         if (snapshot.empty) {
                             console.log("Database is empty. Seeding initial data...");
                             const initialLeaves = [
-                                { employeeName: "Sujithra", leaveDate: "2025-10-20" }, { employeeName: "Sujithra", leaveDate: "2025-10-23" },
-                                { employeeName: "Deepshika", leaveDate: "2025-10-15" }, { employeeName: "Deepshika", leaveDate: "2025-10-20" }, { employeeName: "Deepshika", leaveDate: "2025-10-22" }, { employeeName: "Deepshika", leaveDate: "2025-10-28" },
-                                { employeeName: "Vivek", leaveDate: "2025-10-21" }, { employeeName: "Vivek", leaveDate: "2025-10-22" }, { employeeName: "Vivek", leaveDate: "2025-11-01" }, { employeeName: "Vivek", leaveDate: "2025-11-02" },
-                                { employeeName: "Surjeet", leaveDate: "2025-10-21" }, { employeeName: "Surjeet", leaveDate: "2025-10-22" }, { employeeName: "Surjeet", leaveDate: "2025-10-23" },
-                                { employeeName: "Ravi", leaveDate: "2025-10-21" },
-                                { employeeName: "Akshay", leaveDate: "2025-10-21" }, { employeeName: "Akshay", leaveDate: "2025-10-27" },
-                                { employeeName: "Harshita", leaveDate: "2025-10-16" }, { employeeName: "Harshita", leaveDate: "2025-10-21" }, { employeeName: "Harshita", leaveDate: "2025-10-27" },
-                                { employeeName: "Nilesh", leaveDate: "2025-10-21" },
-                                { employeeName: "Monika", leaveDate: "2025-10-22" }, { employeeName: "Monika", leaveDate: "2025-10-23" }, { employeeName: "Monika", leaveDate: "2025-10-25" },
+                                { employeeName: "Sujithra", leaveDate: "2025-10-20", leaveType: "H" }, { employeeName: "Sujithra", leaveDate: "2025-10-23", leaveType: "P" },
+                                { employeeName: "Deepshika", leaveDate: "2025-10-15", leaveType: "H" }, { employeeName: "Deepshika", leaveDate: "2025-10-20", leaveType: "H" }, { employeeName: "Deepshika", leaveDate: "2025-10-22", leaveType: "P" }, { employeeName: "Deepshika", leaveDate: "2025-10-28", leaveType: "P" },
+                                { employeeName: "Vivek", leaveDate: "2025-10-21", leaveType: "H" }, { employeeName: "Vivek", leaveDate: "2025-10-22", leaveType: "H" }, { employeeName: "Vivek", leaveDate: "2025-11-01", leaveType: "P" }, { employeeName: "Vivek", leaveDate: "2025-11-02", leaveType: "P" },
+                                { employeeName: "Surjeet", leaveDate: "2025-10-21", leaveType: "P" }, { employeeName: "Surjeet", leaveDate: "2025-10-22", leaveType: "P" }, { employeeName: "Surjeet", leaveDate: "2025-10-23", leaveType: "P" }, { employeeName: "Surjeet", leaveDate: "2025-10-24", leaveType: "P" }, { employeeName: "Surjeet", leaveDate: "2025-10-25", leaveType: "P" },
+                                { employeeName: "Ravi", leaveDate: "2025-10-21", leaveType: "H" },
+                                { employeeName: "Akshay", leaveDate: "2025-10-21", leaveType: "H" }, { employeeName: "Akshay", leaveDate: "2025-10-27", leaveType: "P" },
+                                { employeeName: "Harshita", leaveDate: "2025-10-16", leaveType: "S" }, { employeeName: "Harshita", leaveDate: "2025-10-21", leaveType: "H" }, { employeeName: "Harshita", leaveDate: "2025-10-27", leaveType: "P" },
+                                { employeeName: "Nilesh", leaveDate: "2025-10-21", leaveType: "H" },
+                                { employeeName: "Monika", leaveDate: "2025-10-22", leaveType: "H" }, { employeeName: "Monika", leaveDate: "2025-10-23", leaveType: "P" }, { employeeName: "Monika", leaveDate: "2025-10-25", leaveType: "P" },
                             ];
                             for (const leave of initialLeaves) {
                                 await addDoc(leavesCollection, leave);
@@ -317,7 +327,15 @@
                     const leaveCounts = {};
                     leaves.forEach(leave => {
                         const name = leave.employeeName;
-                        leaveCounts[name] = (leaveCounts[name] || 0) + 1;
+                        if (!leaveCounts[name]) {
+                            leaveCounts[name] = { leaves: 0, holidays: 0 };
+                        }
+
+                        if (leave.leaveType === 'H') {
+                            leaveCounts[name].holidays++;
+                        } else { // S, P, C
+                            leaveCounts[name].leaves++;
+                        }
                     });
 
                     const sortedNames = Object.keys(leaveCounts).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
@@ -328,12 +346,22 @@
                     }
 
                     leaveSummaryContainer.innerHTML = sortedNames.map(name => `
-                        <div class="flex justify-between items-center text-sm py-1.5 border-b border-gray-100 last:border-b-0">
+                        <div class="flex justify-between items-center text-sm py-2 border-b border-gray-100 last:border-b-0">
                             <span class="text-gray-700 font-medium">${name}</span>
-                            <span class="font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full text-xs">${leaveCounts[name]}</span>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-right">
+                                    <span class="text-xs text-gray-500">Leaves</span>
+                                    <span class="font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full text-xs">${leaveCounts[name].leaves}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs text-gray-500">Holidays</span>
+                                    <span class="font-bold text-teal-600 bg-teal-100 px-2 py-0.5 rounded-full text-xs">${leaveCounts[name].holidays}</span>
+                                </div>
+                            </div>
                         </div>
                     `).join('');
                 };
+
 
                 const setupLeaveListener = () => {
                     const leavesCollection = collection(db, leavesCollectionPath);
@@ -364,20 +392,15 @@
                         calendarGrid.insertAdjacentHTML('beforeend', '<div class="day-cell"></div>');
                     }
 
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-
                     for (let day = 1; day <= daysInMonth; day++) {
                         const date = new Date(currentYear, currentMonth, day);
                         const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                         const leavesOnThisDay = leaves.filter(l => l.leaveDate === dateString);
 
                         let dayClasses = 'calendar-day border border-gray-200 rounded-lg p-1.5 min-h-[80px] sm:min-h-[100px] text-xs sm:text-sm flex flex-col transition duration-200 ease-in-out';
-                        let dayNumberClasses = 'font-semibold mb-1';
+                        let dayNumberClasses = 'font-semibold mb-1 text-gray-700';
 
-                        if (date < today) {
-                            dayClasses += ' bg-gray-100 text-gray-400 disabled';
-                        } else if (leavesOnThisDay.length >= 3) {
+                        if (leavesOnThisDay.length >= 3) {
                             dayClasses += ' bg-red-500 text-white';
                         } else if (leavesOnThisDay.length === 2) {
                             dayClasses += ' bg-red-200 text-red-900';
@@ -387,16 +410,17 @@
                             dayClasses += ' bg-green-50 text-green-800 hover:bg-green-100';
                         }
                         
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
                         if (date.getTime() === today.getTime()) {
-                            dayNumberClasses += ' bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center';
-                        } else {
-                            dayNumberClasses += ' text-gray-700';
+                            dayNumberClasses = 'font-bold bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center mb-1';
                         }
 
                         let employeeListHTML = leavesOnThisDay.map(leave => `
                             <div class="employee-entry group relative flex items-center justify-between text-xs font-medium bg-white/60 px-1.5 py-0.5 rounded-md mt-1 hover:bg-indigo-100" 
-                                data-id="${leave.id}" data-name="${leave.employeeName}" data-date="${leave.leaveDate}">
+                                data-id="${leave.id}" data-name="${leave.employeeName}" data-date="${leave.leaveDate}" data-type="${leave.leaveType}">
                                 <span class="truncate">${leave.employeeName}</span>
+                                <span class="ml-1 font-bold text-indigo-700 bg-indigo-100 rounded-full px-1.5 text-[10px]">${leave.leaveType}</span>
                                 <button class="delete-btn opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition" data-id="${leave.id}">
                                     <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                 </button>
@@ -421,23 +445,17 @@
                     event.preventDefault();
                     let name = nameInput.value.trim();
                     const newDate = dateInput.value;
+                    const leaveType = leaveTypeInput.value;
 
-                    if (!name || !newDate) {
-                        showMessage('Please fill out both fields.', 'error'); return;
+                    if (!name || !newDate || !leaveType) {
+                        showMessage('Please fill out all fields.', 'error'); return;
                     }
 
-                    // Format name to Proper Case to ensure data consistency
                     const formattedName = name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
-
-                    const today = new Date();
-                    today.setHours(0,0,0,0);
-                    if (new Date(newDate + 'T00:00:00') < today) {
-                        showMessage('Cannot book leave for a past date.', 'error'); return;
-                    }
 
                     const addLeaveAction = async () => {
                         try {
-                            await addDoc(collection(db, leavesCollectionPath), { employeeName: formattedName, leaveDate: newDate });
+                            await addDoc(collection(db, leavesCollectionPath), { employeeName: formattedName, leaveDate: newDate, leaveType: leaveType });
                             showMessage('Leave request submitted!', 'success');
                             resetForm();
                         } catch (error) {
@@ -449,7 +467,7 @@
                     const updateLeaveAction = async () => {
                         try {
                             const leaveDocRef = doc(db, leavesCollectionPath, editingLeave.id);
-                            await updateDoc(leaveDocRef, { leaveDate: newDate });
+                            await updateDoc(leaveDocRef, { leaveDate: newDate, leaveType: leaveType });
                             showMessage('Leave updated!', 'success');
                             resetForm();
                         } catch (error) {
@@ -459,7 +477,7 @@
                     };
 
                     if (editingLeave) {
-                        if (newDate === editingLeave.leaveDate) { resetForm(); return; }
+                        if (newDate === editingLeave.leaveDate && leaveType === editingLeave.leaveType) { resetForm(); return; }
                         if (leaves.filter(l => l.leaveDate === newDate && l.id !== editingLeave.id).length >= 2) {
                             showConfirmation('Capacity Warning', 'The new date is at capacity. Are you sure you want to move this leave?', updateLeaveAction);
                         } else {
@@ -506,6 +524,7 @@
                             nameInput.value = editingLeave.employeeName;
                             nameInput.disabled = true;
                             dateInput.value = editingLeave.leaveDate;
+                            leaveTypeInput.value = editingLeave.leaveType;
                             cancelButton.classList.remove('hidden');
                             nameInput.focus();
                         }
@@ -520,7 +539,7 @@
                     if (leavesOnDay.length > 0) {
                         const date = new Date(dayCell.dataset.date + 'T00:00:00');
                         const formattedDate = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-                        tooltip.innerHTML = `<h4 class="font-bold text-base mb-1 border-b border-gray-600 pb-1">${formattedDate}</h4><ul class="list-disc list-inside">${leavesOnDay.map(l => `<li class="py-1">${l.employeeName}</li>`).join('')}</ul>`;
+                        tooltip.innerHTML = `<h4 class="font-bold text-base mb-1 border-b border-gray-600 pb-1">${formattedDate}</h4><ul class="list-inside">${leavesOnDay.map(l => `<li class="py-1 flex justify-between"><span>${l.employeeName}</span> <span class="font-semibold bg-gray-600 px-1.5 rounded">${l.leaveType}</span></li>`).join('')}</ul>`;
                         tooltip.style.left = `${event.clientX + 15}px`;
                         tooltip.style.top = `${event.clientY + 15}px`;
                         tooltip.classList.add('visible');
@@ -550,18 +569,19 @@
                             const date = new Date(leave.leaveDate + 'T00:00:00');
                             acc[leave.leaveDate] = {
                                 day: date.toLocaleDateString('en-US', { weekday: 'long' }),
-                                names: []
+                                details: []
                             };
                         }
-                        acc[leave.leaveDate].names.push(leave.employeeName);
+                        acc[leave.leaveDate].details.push({ name: leave.employeeName, type: leave.leaveType });
                         return acc;
                     }, {});
 
                     const sortedDates = Object.keys(groupedLeaves).sort();
 
                     const tableBody = sortedDates.map(date => {
-                        const { day, names } = groupedLeaves[date];
-                        return [date, day, names.join(', ')];
+                        const { day, details } = groupedLeaves[date];
+                        const employeesString = details.map(d => `${d.name} (${d.type})`).join(', ');
+                        return [date, day, employeesString];
                     });
 
                     const doc = new jsPDF();
@@ -672,9 +692,6 @@
                     if (currentMonth > 11) { currentMonth = 0; currentYear++; }
                     renderCalendar();
                 });
-
-                // --- INITIALIZATION ---
-                dateInput.setAttribute('min', new Date().toISOString().split('T')[0]);
             }
         });
     </script>
